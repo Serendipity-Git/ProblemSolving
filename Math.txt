@@ -7,6 +7,83 @@ const int INF = 2000000000;
 const ll LLINF = 20000000000000;
 const ll MAX = 50; // depending on the problem
 
+struct Matrix {
+	int r, c;
+	vector<vector<ll>> mat;
+
+	Matrix() { ; }
+	Matrix(int r, int c) {
+		this->r = r; this->c = c;
+		mat.resize(r);
+		for (int i = 0; i < r; i++) { mat[i].resize(c); }
+		for (int j = 0; j < r; j++) {
+			for (int i = 0; i < c; i++) { mat[j][i] = 0; }
+		}
+	}
+
+	void identity() {		
+		for (int i = 0; i < r; i++) { mat[i][i] = 1; }	
+	}
+
+	void add(Matrix& other) {
+		for (int j = 0; j < r; j++) {
+			for (int i = 0; i < c; i++) {
+				mat[j][i] += other.mat[j][i];
+			}
+		}
+	}
+
+	void sub(Matrix& other) {
+		for (int j = 0; j < r; j++) {
+			for (int i = 0; i < c; i++) {
+				mat[j][i] -= other.mat[j][i];
+			}
+		}
+	}
+
+	void mul(Matrix& other) {
+		vector<vector<ll>> ret(r);
+		for (int i = 0; i < r; i++) { ret[i].resize(other.c); }
+
+		for (int j = 0; j < r; j++) {
+			for (int i = 0; i < other.c; i++) {
+				for (int k = 0; k < c; k++) {
+					ret[j][i] += mat[j][k] * other.mat[k][i];
+					ret[j][i] %= MOD;
+				}
+			}
+		}
+		mat = ret;
+	}
+
+	// matrix inverse not yet
+};
+
+void FibonacciMatrix(){
+    Matrix table[31];
+    for (int k = 0; k <= 30; k++) { table[k] = Matrix(2, 2); }
+	table[0].mat[0][0] = 1; table[0].mat[0][1] = 1;
+	table[0].mat[1][0] = 1; table[0].mat[1][1] = 0;
+
+	for (int k = 1; k <= 30; k++) {
+		table[k].add(table[k - 1]);
+		table[k].mul(table[k - 1]);
+	}
+}
+ll Fibonacci(int N){
+    int cnt = 0;
+	Matrix ans(2, 2); ans.identity();
+
+	while (N) {
+		if (N % 2) { ans.mul(table[cnt]); }
+
+		N /= 2;		++cnt;
+	}
+
+    return ans.mat[0][1];
+}
+
+
 void PrimeGenerator() {
     vector<ll> prime;
     bool isprime[MAX + 1];
