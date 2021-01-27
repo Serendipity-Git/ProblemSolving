@@ -5,6 +5,7 @@ typedef pair<int, int> pi;
 typedef pair<ll, ll> pii;
 const int INF = 2000000000;
 const ll LLINF = 20000000000000;
+const ll MOD = 10000; //depending on the problem
 const ll MAX = 50; // depending on the problem
 
 struct Matrix {
@@ -59,6 +60,7 @@ struct Matrix {
 	// matrix inverse not yet
 };
 
+
 void FibonacciMatrix(){
     Matrix table[31];
     for (int k = 0; k <= 30; k++) { table[k] = Matrix(2, 2); }
@@ -84,6 +86,7 @@ ll Fibonacci(int N){
 }
 
 
+
 void PrimeGenerator() {
     vector<ll> prime;
     bool isprime[MAX + 1];
@@ -99,10 +102,5 @@ void PrimeGenerator() {
 }
 
 
-int main()
-{
-    
-    return 0;
-}
 
 
