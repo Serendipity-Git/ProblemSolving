@@ -1,0 +1,44 @@
+
+// Fast Fourier Transform && convolution
+
+int bitReverse(int n, int k) {
+    int ret = 0;
+    for (int i = 0; i < k; i++) {
+        if ((n >> i) & 1) { ret |= (1 << (k - 1 - i)); }
+    }
+    return ret;
+}
+void fft(vector<inum>& a, bool reverse) {
+    const int n = (int)a.size();
+    int t = n, k = 0; while (t>1) { t /= 2; ++k; }
+
+    for (int i = 0; i < n; i++) {
+        int j = bitReverse(i, k);
+        if (i < j) { swap(a[i], a[j]); }
+    }
+
+    for (int s = 2; s <= n; s *= 2) {
+        double t = 2 * PI / s * (reverse ? -1 : 1);
+        inum ws(cos(t), sin(t));
+        for (int j = 0; j < n; j += s) {
+            inum w(1, 0);
+            for (int i = 0; i < s / 2; i++) {
+                inum temp = a[j + i + s / 2] * w;
+                a[j + i + s / 2] = a[j + i] - temp;
+                a[j + i] += temp;
+                w *= ws;
+            }
+        }
+    }
+    if (reverse) { for (int i = 0; i < n; i++) { a[i] /= n; } }
+}
+void convolution(vector<inum>& a, vector<inum>& b) {
+    int n = (int)a.size();
+    int np = 1; while (np < n) { np *= 2; }np *= 2;
+
+    a.resize(np); b.resize(np);
+    fft(a, false);
+    fft(b, false);
+    for (int i = 0; i < np; i++) { a[i] *= b[i]; }
+    fft(a, true);
+}
