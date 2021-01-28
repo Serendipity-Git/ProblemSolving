@@ -2,15 +2,13 @@
 // Fast Fourier Transform && convolution
 
 int bitReverse(int n, int k) {
-    int ret = 0;
-    for (int i = 0; i < k; i++) {
-        if ((n >> i) & 1) { ret |= (1 << (k - 1 - i)); }
-    }
-    return ret;
+    int r, i;
+    for (r = 0, i = 0; i < k; ++i) { r |= ((n >> i) & 1) << (k - i - 1); }
+    return r;
 }
 void fft(vector<inum>& a, bool reverse) {
     const int n = (int)a.size();
-    int t = n, k = 0; while (t>1) { t /= 2; ++k; }
+    int t = n, k = 0; while (t > 1) { t >>= 1; ++k; }
 
     for (int i = 0; i < n; i++) {
         int j = bitReverse(i, k);
@@ -33,8 +31,8 @@ void fft(vector<inum>& a, bool reverse) {
     if (reverse) { for (int i = 0; i < n; i++) { a[i] /= n; } }
 }
 void convolution(vector<inum>& a, vector<inum>& b) {
-    int n = (int)a.size();
-    int np = 1; while (np < n) { np *= 2; }np *= 2;
+    int al = (int)a.size(); int bl = (int)b.size();
+    int np = 1; while (np < al + bl) { np <<= 1; }
 
     a.resize(np); b.resize(np);
     fft(a, false);
