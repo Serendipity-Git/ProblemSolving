@@ -1,0 +1,50 @@
+// Suffix Array
+
+int N;
+int num[MAX];
+int suffix[MAX];
+int suffixtmp[MAX];
+int group[MAX];
+int grouptmp[MAX];
+void CountingSort(int from) {
+    int MAXI = max(300, N + 1);
+    memset(num, 0, sizeof(num));
+    for (int i = 0; i < N; i++) {
+        if (suffix[i] + from < N) { num[group[suffix[i] + from]]++; }
+        else { num[0]++; }
+    }
+    for (int i = 1; i < MAXI; i++) { num[i] += num[i - 1]; }
+    for (int i = N - 1; i >= 0; i--) {
+        if (suffix[i] + from < N) { suffixtmp[--num[group[suffix[i] + from]]] = suffix[i]; }
+        else { suffixtmp[--num[0]] = suffix[i]; }
+    }
+
+    memset(num, 0, sizeof(num));
+    for (int i = 0; i < N; i++) { num[group[suffix[i]]]++; }
+    for (int i = 1; i < MAXI; i++) { num[i] += num[i - 1]; }
+    for (int i = N - 1; i >= 0; i--) { suffix[--num[group[suffixtmp[i]]]] = suffixtmp[i]; }
+}
+void SuffixArray(string input) {
+    for (int i = 0; i < N; i++) { suffix[i] = i; group[i] = input[i]; }
+
+    for (int k = 1; k < N; k <<= 1) {
+        int r = 1;
+        CountingSort(k);
+
+        grouptmp[suffix[0]] = r;
+        for (int i = 1; i < N; i++) {
+            bool same = true;
+            if (group[suffix[i]] == group[suffix[i - 1]]) {
+                int a = suffix[i] + k, b = suffix[i - 1] + k;
+                if (a >= N) { a = N; } if (b >= N) { b = N; }
+                if (group[a] != group[b]) { same = false; }
+            }
+            else { same = false; }
+
+            grouptmp[suffix[i]] = same ? r : ++r;
+        }
+        for (int i = 0; i < N; i++) { group[i] = grouptmp[i]; }
+
+        if (group[suffix[N - 1]] == N ) { break; }
+    }
+}
