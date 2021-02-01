@@ -16,3 +16,57 @@ void makeUnion(int r1, int r2) {
 		member[r1] += member[r2];
 	}
 }
+
+
+// Penwick Tree
+ll a[MAX + 1] = { 0, };
+ll s[MAX + 1] = { 0, };
+ll tree[MAX + 1];
+ll firstbit1_pow2(ll k) { return k & -k; }
+void penwick() {
+    for (int i = 1; i <= N; i++) { s[i] = s[i - 1] + a[i]; }
+    for (int i = 1; i <= N; i++) {
+        ll p = firstbit1_pow2(i);
+        tree[i] = s[i] - s[i - p];
+    }
+}
+ll sum(ll n) {
+    ll ret = 0;
+    while (n >= 1) {
+        ret += tree[n];
+        n -= firstbit1_pow2(n);
+    }
+    return ret;
+}
+void update(ll n, ll x) {
+    a[n] += x;
+    while (n <= N) {
+        tree[n] += x;
+        n += firstbit1_pow2(n);
+    }
+}
+
+// Segment Tree
+ll A[MAX];
+ll Segtree[3 * MAX];
+void maketree(int left, int right, int node) {
+    if (left == right) { Segtree[node] = A[left]; return; }
+    int mid = (left + right) / 2;
+    maketree(left, mid, node * 2);
+    maketree(mid + 1, right, node * 2 + 1);
+    Segtree[node] = Segtree[node * 2] + Segtree[node * 2 + 1];
+}
+void update(int left, int right, int which, int node) {
+    if (left == right) { Segtree[node] = A[left]; return; }
+    int mid = (left + right) / 2;
+    if (which <= mid) { update(left, mid, which, node * 2); }
+    else { update(mid + 1, right, which, node * 2 + 1); }
+    Segtree[node] = Segtree[node * 2] + Segtree[node * 2 + 1];
+}
+ll sum(int left, int right, int from, int to, int node) {
+    if (right<from || left>to) { return 0; }
+    if (from <= left && right <= to) { return Segtree[node]; }
+    int mid = (left + right) / 2;
+    ll ret = sum(left, mid, from, to, node * 2) + sum(mid + 1, right, from, to, node * 2 + 1);
+    return ret;
+}
