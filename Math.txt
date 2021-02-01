@@ -86,6 +86,9 @@ int bitReverse(int n, int k) {
     }
     return ret;
 }
+int firstbit1_pow2(int k) {
+    return k & -k;
+}
 
 
 
