@@ -1,7 +1,10 @@
 // Suffix Array
 
 int N;
-int num[MAX];
+string input;
+int num[MAX + 1];
+int ISA[MAX];
+int lcp[MAX];
 int suffix[MAX];
 int suffixtmp[MAX];
 int group[MAX];
@@ -24,7 +27,7 @@ void CountingSort(int from) {
     for (int i = 1; i < MAXI; i++) { num[i] += num[i - 1]; }
     for (int i = N - 1; i >= 0; i--) { suffix[--num[group[suffixtmp[i]]]] = suffixtmp[i]; }
 }
-void SuffixArray(string input) {
+void SuffixArray() {
     for (int i = 0; i < N; i++) { suffix[i] = i; group[i] = input[i]; }
 
     for (int k = 1; k < N; k <<= 1) {
@@ -45,6 +48,19 @@ void SuffixArray(string input) {
         }
         for (int i = 0; i < N; i++) { group[i] = grouptmp[i]; }
 
-        if (group[suffix[N - 1]] == N ) { break; }
+        if (group[suffix[N - 1]] == N) { break; }
+    }
+}
+void LCP() {
+    int k = 0;
+    for (int i = 0; i < N; i++) { ISA[suffix[i]] = i; }
+    for (int i = 0; i < N; i++) {
+        int idx = ISA[i]; if (idx == 0) { lcp[0] = -1; k = 0; continue; }
+        while (k + i < N && k + suffix[idx - 1] < N &&
+            input[k + i] == input[k + suffix[idx - 1]]) {
+            k++;
+        }
+        lcp[ISA[i]] = k;
+        k = max(k - 1, 0);
     }
 }
