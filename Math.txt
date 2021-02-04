@@ -117,3 +117,28 @@ ll gcd (ll a, ll b) {
 ll LCM(ll a, ll b){
 	return a*b/gcd(a,b);
 }
+
+
+// Binary search
+int lower_bound(int n){
+	int lo, hi, mid;
+    lo = 0; hi = N - 1;
+    while (lo < hi) {
+        mid = (lo + hi) / 2;
+        if (a[mid]) >= n) { hi = mid; }
+        else { lo = mid + 1; }
+    }
+	if (a[lo]==n){return n;}
+	else{return -1;}
+}
+int upper_bound(int n){
+	int lo, hi, mid;
+    lo = 0; hi = N - 1;
+    while (lo < hi) {
+        mid = (lo + hi + 1) / 2;
+        if (a[mid]) <= n) { lo = mid; }
+        else { hi = mid - 1; }
+    }
+	if (a[lo]==n){return n;}
+	else{return -1;}
+}
