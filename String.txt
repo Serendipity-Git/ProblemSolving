@@ -1,7 +1,6 @@
 // Suffix Array
 
 int N;
-string input;
 int num[MAX + 1];
 int ISA[MAX];
 int lcp[MAX];
@@ -9,6 +8,7 @@ int suffix[MAX];
 int suffixtmp[MAX];
 int group[MAX];
 int grouptmp[MAX];
+char input[MAX];
 void CountingSort(int from) {
     int MAXI = max(300, N + 1);
     memset(num, 0, sizeof(num));
@@ -62,5 +62,57 @@ void LCP() {
         }
         lcp[ISA[i]] = k;
         k = max(k - 1, 0);
+    }
+}
+pi stringMatching(const char* match, int l) {
+    pi ret;
+
+    int lo, hi, mid;
+    lo = 0; hi = N - 1;
+    while (lo < hi) {
+        mid = (lo + hi) / 2;
+        if (strncmp(input + suffix[mid], match, l) >= 0) { hi = mid; }
+        else { lo = mid + 1; }
+    }
+    if (strncmp(input + suffix[lo], match, l) != 0) { ret.first = -1; }
+    else { ret.first = lo; }
+
+    lo = 0; hi = N - 1;
+    while (lo < hi) {
+        mid = (lo + hi + 1) / 2;
+        if (strncmp(input + suffix[mid], match, l) <= 0) { lo = mid; }
+        else { hi = mid - 1; }
+    }
+    if (strncmp(input + suffix[lo], match, l) != 0) { ret.second = -1; }
+    else { ret.second = lo; }
+    return ret;
+}
+
+
+// KMP Algorithm
+
+string T, P;
+int tl, pl;
+int fail[MAX];
+vector<int> ans;
+void setfail() {
+    fail[0] = 0;
+    int i = 1, j = 0;
+
+    while (i < pl) {
+        while (j > 0 && P[i] != P[j]) { j = fail[j]; }
+        if (P[i] == P[j]) { fail[++i] = ++j;}
+        else { ++i; j = 0; }
+    }
+}
+void KMP() {
+    int i = 0, j = 0;
+    while (i < tl) {
+        while (j > 0 && T[i] != P[j]) { j = fail[j]; }
+        if (T[i] == P[j]) { 
+            ++j; ++i; 
+            if (j == pl) { ans.push_back(i - pl); j = fail[j]; }
+        }
+        else { ++i; j = 0; }
     }
 }
