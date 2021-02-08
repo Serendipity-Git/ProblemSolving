@@ -40,3 +40,40 @@ void convolution(vector<inum>& a, vector<inum>& b) {
     for (int i = 0; i < np; i++) { a[i] *= b[i]; }
     fft(a, true);
 }
+
+
+// Convex hull trick (Yet O(n) only)
+// Can only use when M simply decreases/increases
+// Offline CHT
+
+struct line {
+    ll m, n; ld from;
+
+    line(ll _m, ll _n) : m(_m), n(_n), from(-INF) {}
+    
+    ld cross(const line& other) {
+        return 1.0 * (other.n - n) / (m - other.m);
+    }
+};
+void CHT{
+    ll lo = 0;
+    for (int i = 1; i <= N; i++) {
+        line newline(M(j), N(j)); // depending on the problem
+        
+        while (!hull.empty()) {
+            line top = hull.back();
+            if (top.from < newline.cross(top)) {
+                newline.from = newline.cross(top);
+                break;
+            }
+            hull.pop_back();
+            if (lo == hull.size()) { --lo; }
+        }
+        hull.push_back(newline);
+
+        ll x = S[i];
+        while (lo + 1 < hull.size() && hull[lo + 1].from < x) { ++lo; }
+        DP[i] = hull[lo].m * x + hull[lo].n + VAL(i); // depending on the problem
+    }
+    cout << DP[N];
+}
