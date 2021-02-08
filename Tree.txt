@@ -1,0 +1,47 @@
+// LCA query
+
+int depth[MAX];
+int table[18][MAX];
+vector<int> adj[MAX];
+void maketree(int n, int prev, int cnt) {
+    depth[n] = cnt;
+    table[0][n] = prev;
+    for (auto it : adj[n]) {
+        if (it == prev) { continue; }
+        maketree(it, n, cnt + 1);
+    }
+}
+void settable() {
+    for (int k = 1; k < 18; k++) {
+        for (int i = 0; i < N; i++) {
+            table[k][i] = table[k - 1][table[k - 1][i]];
+        }
+    }
+}
+int mymove(int cur, int n) {
+    int ret = cur;
+    int cnt = 0;
+    while (n) {
+        if (n % 2) { ret = table[cnt][ret]; }
+        n >>= 1;
+        ++cnt;
+    }
+    return ret;
+}
+int getparent(int a, int b) {
+    if (depth[a] > depth[b]) { swap(a, b); }
+    b = mymove(b, depth[b] - depth[a]);
+    if (a == b) { return a; }
+    int cnt = 0;
+    while ((1 << cnt) <= max(depth[b], depth[a])) { ++cnt; }
+    --cnt;
+
+    while (cnt >= 0) {
+        if (table[cnt][a] != table[cnt][b]) {
+            a = table[cnt][a];
+            b = table[cnt][b];
+        }
+        --cnt;
+    }
+    return table[0][a];
+}
