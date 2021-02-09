@@ -1,0 +1,154 @@
+// Dinic algorithm O(V^2*E)
+
+struct Edge {
+	int to, cap, flow;
+	Edge* reverse;
+	Edge(int _to, int _cap) : to(_to), cap(_cap), flow(0) {}
+	int spare() { return cap - flow; }
+	void add(int f) {
+		this->flow += f;
+		reverse->flow -= f;
+	}
+};
+
+int N, M, s, t;
+int level[MAX];
+int see[MAX];
+vector<Edge*> adj[MAX];
+
+// if undirected, change e2.cap -> cap
+void addEdge(int from, int to, int cap) {
+	Edge* e1 = new Edge(to, cap);
+	Edge* e2 = new Edge(from, 0);
+	e1->reverse = e2; e2->reverse = e1;
+	adj[from].push_back(e1);
+	adj[to].push_back(e2);
+}
+bool bfs() {
+	queue<int> myqueue;
+	memset(level, -1, sizeof(level));
+	level[s] = s; myqueue.push(s);
+	while (!myqueue.empty()) {
+		int cur = myqueue.front(); myqueue.pop();
+		for (auto it : adj[cur]) {
+			if (it->spare() > 0 && level[it->to] == -1) {
+				myqueue.push(it->to); level[it->to] = level[cur] + 1;
+			}
+		}
+	}
+	if (level[t] == -1) { return false; }
+	return true;
+}
+int dfs(int n, int flow) {
+	if (n == t) { return flow; }
+	for (int& i = see[n]; i < adj[n].size(); i++) {
+		int next = adj[n][i]->to;
+		if (adj[n][i]->spare() > 0 && level[next] == level[n] + 1) {
+			int f = dfs(next, min(flow, adj[n][i]->spare()));
+			if (f > 0) { adj[n][i]->add(f); return f; }
+		}
+	}
+	return 0;
+}
+int dinic() {
+	int ret = 0;
+	while (bfs()) {
+		memset(see, 0, sizeof(see));
+		while (true) {
+			int f = dfs(s, INF);
+			if (f == 0) { break; }
+			ret += f;
+		}
+	}
+	return ret;
+}
+
+
+
+// Hopcroft-Karp O(E*sqrt(V))
+
+int N, M;
+int L[MAX];
+int R[MAX];
+int level[MAX];
+int see[MAX];
+vector<int> adj[MAX];
+queue<int> myqueue;
+
+bool dfs(int n) {
+	for (; see[n] < adj[n].size(); see[n]++) {
+		int it = adj[n][see[n]];
+		if (R[it] == -1 || level[R[it]] == level[n] + 1 && dfs(R[it])) {
+			L[n] = it;
+			R[it] = n;
+			return true;
+		}
+	}
+	return false;
+}
+void bfs() {
+	for (int i = 0; i < N; i++) {
+		if (L[i] == -1) { myqueue.push(i); level[i] = 0; }
+		else { level[i] = INF; }
+		see[i] = 0;
+	}
+	while (!myqueue.empty()) {
+		int cur = myqueue.front(); myqueue.pop();
+		for (auto it : adj[cur]) {
+			if (R[it] != -1 && level[R[it]] == INF) {
+				myqueue.push(R[it]); level[R[it]] = level[cur] + 1;
+			}
+		}
+	}
+}
+int hopcroft() {
+	int ret = 0;
+	memset(L, -1, sizeof(L));
+	memset(R, -1, sizeof(R));
+	while (true) {
+		bfs();
+		int flow = 0;
+		for (int i = 0; i < N; i++) {
+			if (L[i] == -1 && dfs(i)) { ++flow; }
+		}
+		if (flow == 0) { break; }
+		ret += flow;
+	}
+	return ret;
+}
+
+
+// Bipartite Matching O(VE)
+
+int N, M;
+int L[MAX];
+int R[MAX];
+int visited[MAX];
+vector<int> adj[MAX];
+
+bool dfs(int n) {
+	visited[n] = true;
+	for (auto it : adj[n]) {
+		if (R[it] == -1 || !visited[R[it]] && dfs(R[it])) {
+			L[n] = it;
+			R[it] = n;
+			return true;
+		}
+	}
+	return false;
+}
+int bipartite() {
+	int ret = 0;
+	memset(L, -1, sizeof(L));
+	memset(R, -1, sizeof(R));
+	while (true) {
+		int flow = 0;
+		memset(visited, false, sizeof(visited));
+		for (int i = 0; i < N; i++) {
+			if (L[i] == -1 && dfs(i)) { ++flow; }
+		}
+		if (flow == 0) { break; }
+		ret += flow;
+	}
+	return ret;
+}
