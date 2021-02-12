@@ -14,6 +14,7 @@ struct Edge {
 int N, M, s, t;
 int level[MAX];
 int see[MAX];
+queue<int> myqueue;
 vector<Edge*> adj[MAX];
 
 // if undirected, change e2.cap -> cap
@@ -25,9 +26,8 @@ void addEdge(int from, int to, int cap) {
 	adj[to].push_back(e2);
 }
 bool bfs() {
-	queue<int> myqueue;
 	memset(level, -1, sizeof(level));
-	level[s] = s; myqueue.push(s);
+	level[s] = 0; myqueue.push(s);
 	while (!myqueue.empty()) {
 		int cur = myqueue.front(); myqueue.pop();
 		for (auto it : adj[cur]) {
@@ -41,7 +41,7 @@ bool bfs() {
 }
 int dfs(int n, int flow) {
 	if (n == t) { return flow; }
-	for (int& i = see[n]; i < adj[n].size(); i++) {
+	for (int& i = see[n]; i < (int)adj[n].size(); i++) {
 		int next = adj[n][i]->to;
 		if (adj[n][i]->spare() > 0 && level[next] == level[n] + 1) {
 			int f = dfs(next, min(flow, adj[n][i]->spare()));
@@ -150,5 +150,67 @@ int bipartite() {
 		if (flow == 0) { break; }
 		ret += flow;
 	}
+	return ret;
+}
+
+
+// MaxFlow - Mincost O(V*E*F)~O(E*F)
+
+struct Edge {
+	int to, cap, flow, cost;
+	Edge* reverse;
+	Edge(int _to, int _cap, int _cost) :to(_to), cap(_cap), cost(_cost), flow(0) {}
+	int spare() { return cap - flow; }
+	void add(int f) {
+		this->flow += f;
+		reverse->flow -= f;
+	}
+};
+
+int N, M, s, t;
+vector<Edge*> adj[MAX];
+
+void addEdge(int from, int to, int cap, int cost) {
+	Edge* e1 = new Edge(to, cap, cost);
+	Edge* e2 = new Edge(from, 0, -cost);
+	e1->reverse = e2; e2->reverse = e1;
+	adj[from].push_back(e1);
+	adj[to].push_back(e2);
+}
+pair<int, int> MCMF() {
+	pi ret;
+	int cans = 0, fans = 0;
+	while (true) {
+		int dis[MAX]; fill(dis, dis + MAX, INF);
+		int prev[MAX]; memset(prev, -1, sizeof(prev));
+		bool inQ[MAX]; memset(inQ, false, sizeof(inQ));
+		Edge* path[MAX];
+		queue<int> myqueue;
+
+		myqueue.push(s); inQ[s] = true; dis[s] = 0;
+		while (!myqueue.empty()) {
+			int cur = myqueue.front(); myqueue.pop(); inQ[cur] = false;
+			for (auto it : adj[cur]) {
+				if (it->spare() > 0 && dis[it->to] > dis[cur] + it->cost) {
+					if (!inQ[it->to]) { myqueue.push(it->to); inQ[it->to] = true; }
+					dis[it->to] = dis[cur] + it->cost;
+					prev[it->to] = cur;
+					path[it->to] = it;
+				}
+			}
+		}
+		if (prev[t] == -1) { break; }
+		int flow = INF;
+		for (int i = t; i != s; i = prev[i]) {
+			flow = min(flow, path[i]->spare());
+		}
+		fans += flow;
+		for (int i = t; i != s; i = prev[i]) {
+			cans += path[i]->cost;
+			path[i]->add(fans);
+		}
+	}
+	ret.first = fans;
+	ret.second = cans;
 	return ret;
 }
