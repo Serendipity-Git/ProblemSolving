@@ -93,8 +93,8 @@ int firstbit1_pow2(int k) {
 
 
 // Prime operations
+vector<ll> prime;
 void PrimeGenerator() {
-    vector<ll> prime;
     bool isprime[MAX + 1];
     memset(isprime, true, sizeof(isprime));
     for (ll j = 2; j <= MAX; j++) {
