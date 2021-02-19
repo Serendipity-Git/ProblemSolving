@@ -1,58 +1,61 @@
-// Matrix operations
-struct Matrix {
-	int r, c;
-	vector<vector<ll>> mat;
+///////////////////
+/* Number Theory */
 
-	Matrix() { ; }
-	Matrix(int r, int c) {
-		this->r = r; this->c = c;
-		mat.resize(r);
-		for (int i = 0; i < r; i++) { mat[i].resize(c); }
-		for (int j = 0; j < r; j++) {
-			for (int i = 0; i < c; i++) { mat[j][i] = 0; }
-		}
-	}
-
-	void identity() {		
-		for (int i = 0; i < r; i++) { mat[i][i] = 1; }	
-	}
-
-	void add(Matrix& other) {
-		for (int j = 0; j < r; j++) {
-			for (int i = 0; i < c; i++) {
-				mat[j][i] += other.mat[j][i];
-			}
-		}
-	}
-
-	void sub(Matrix& other) {
-		for (int j = 0; j < r; j++) {
-			for (int i = 0; i < c; i++) {
-				mat[j][i] -= other.mat[j][i];
-			}
-		}
-	}
-
-	void mul(Matrix& other) {
-		vector<vector<ll>> ret(r);
-		for (int i = 0; i < r; i++) { ret[i].resize(other.c); }
-
-		for (int j = 0; j < r; j++) {
-			for (int i = 0; i < other.c; i++) {
-				for (int k = 0; k < c; k++) {
-					ret[j][i] += mat[j][k] * other.mat[k][i];
-					ret[j][i] %= MOD;
-				}
-			}
-		}
-		mat = ret;
-	}
-
-	// matrix inverse not yet
-};
+// Prime operations
+// Sieve of Erathosthenes O(nloglogn)
+vector<ll> prime;
+void PrimeGenerator() {
+    bool isprime[MAX + 1];
+    memset(isprime, true, sizeof(isprime));
+    for (ll j = 2; j <= MAX; j++) {
+        if (isprime[j]) { 
+            prime.push_back(j); 
+            for (ll i = j * j; i <= MAX; i += j) {
+                isprime[i] = false;
+            }
+        }
+    }
+}
+// GCD && LCM
+ll gcd (ll a, ll b) {
+   if (a == 0) return b;
+   return gcd(b % a, a);
+}
+ll LCM(ll a, ll b){
+	return a*b/gcd(a,b);
+}
 
 
-// Fibonacci Numbers (OlogN)
+///////////////////
+/* Combinatorics */
+
+// Catalan Numbers
+A,B 각각이 n개씩 존재하고, 이들을 배열하는 방법
+이때, 현재까지 배열된 상태가 항상
+A가 B보다 크거나 같음을 유지하면서 2n개를 배열하는 방법이다
+= 2nCn / (n+1)
+= sigma Ci*Cn-i-1 from i=0 to n-1
+
+2nCn / (n+1)을 이용하는 것이 좋아보임.
+
+1. n개의 노드로 이루어진 이진 트리의 개수
+2. n+1개의 노드로 이루어지고 루트가 있는 트리의 개수
+
+
+// combination O(NlogMOD)
+ll combination(ll n, ll k) {
+    ll ret = 1;
+    for (ll i = 1; i <= n; i++) { ret *= i; ret %= MOD; }
+    ll fact = 1;
+    for (ll i = 1; i <= k; i++) { fact *= i; fact %= MOD; }
+    ret *= power(fact, MOD - 2); ret %= MOD;
+    fact = 1;
+    for (ll i = 1; i <= n - k; i++) { fact *= i; fact %= MOD; }
+    ret *= power(fact, MOD - 2); ret %= MOD;
+    return ret;
+}
+
+// Fibonacci Numbers O(logN)
 void FibonacciMatrix(){
     Matrix table[31];
     for (int k = 0; k <= 30; k++) { table[k] = Matrix(2, 2); }
@@ -78,6 +81,62 @@ ll Fibonacci(int N){
 }
 
 
+////////////////////
+/* Linear Algebra */
+
+// Matrix operations
+struct Matrix {
+	int r, c;
+	vector<vector<ll>> mat;
+
+	Matrix() { ; }
+	Matrix(int r, int c) {
+		this->r = r; this->c = c;
+		mat.resize(r);
+		for (int i = 0; i < r; i++) { mat[i].resize(c); }
+		for (int j = 0; j < r; j++) {
+			for (int i = 0; i < c; i++) { mat[j][i] = 0; }
+		}
+	}
+	void identity() {		
+		for (int i = 0; i < r; i++) { mat[i][i] = 1; }	
+	}
+	void add(Matrix& other) {
+		for (int j = 0; j < r; j++) {
+			for (int i = 0; i < c; i++) {
+				mat[j][i] += other.mat[j][i];
+			}
+		}
+	}
+	void sub(Matrix& other) {
+		for (int j = 0; j < r; j++) {
+			for (int i = 0; i < c; i++) {
+				mat[j][i] -= other.mat[j][i];
+			}
+		}
+	}
+	void mul(Matrix& other) {
+		vector<vector<ll>> ret(r);
+		for (int i = 0; i < r; i++) { ret[i].resize(other.c); }
+
+		for (int j = 0; j < r; j++) {
+			for (int i = 0; i < other.c; i++) {
+				for (int k = 0; k < c; k++) {
+					ret[j][i] += mat[j][k] * other.mat[k][i];
+					ret[j][i] %= MOD;
+				}
+			}
+		}
+		mat = ret;
+	}
+
+	// matrix inverse not yet
+};
+
+
+///////////////////
+/* Discrete Math */
+
 // Bit operations
 int bitReverse(int n, int k) {
     int ret = 0;
@@ -90,35 +149,16 @@ int firstbit1_pow2(int k) {
     return k & -k;
 }
 
-
-
-// Prime operations
-// Sieve of Erathosthenes O(nloglogn)
-vector<ll> prime;
-void PrimeGenerator() {
-    bool isprime[MAX + 1];
-    memset(isprime, true, sizeof(isprime));
-    for (ll j = 2; j <= MAX; j++) {
-        if (isprime[j]) { 
-            prime.push_back(j); 
-            for (ll i = j * j; i <= MAX; i += j) {
-                isprime[i] = false;
-            }
-        }
+// power(X,Y) O(logY)
+ll power(ll x, ll y) {
+    if (y == 0) { return 1; }
+    if (y % 2) { return power(x, y - 1) * x % MOD; }
+    else {
+        ll ret = power(x, y / 2);
+        ret *= ret; ret %= MOD;
+        return ret;
     }
 }
-
-
-
-// GCD && LCM
-ll gcd (ll a, ll b) {
-   if (a == 0) return b;
-   return gcd(b % a, a);
-}
-ll LCM(ll a, ll b){
-	return a*b/gcd(a,b);
-}
-
 
 // Binary search
 int lower_bound(int n){
@@ -143,14 +183,3 @@ int upper_bound(int n){
 	if (a[lo]==n){return n;}
 	else{return -1;}
 }
-
-
-// Catalan Numbers
-A,B 각각이 n개씩 존재하고, 이들을 배열하는 방법
-이때, 현재까지 배열된 상태가 항상
-A가 B보다 크거나 같음을 유지하면서 2n개를 배열하는 방법이다
-= 2nCn / (n+1)
-= sigma Ci*Cn-i-1 from i=0 to n-1
-
-2nCn / (n+1)을 이용하는 것이 좋아보임.
-
