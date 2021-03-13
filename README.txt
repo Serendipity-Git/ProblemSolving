@@ -3,6 +3,7 @@ References are allowed, but copies are unallowed.
 
 // Constants && Reservations
 #include <bits/stdc++.h>
+#define fastio std::ios_base::sync_with_stdio(false); cin.tie(NULL); cout.tie(NULL);
 using namespace std;
 typedef long long ll;
 typedef long double ld;
@@ -12,9 +13,8 @@ typedef complex<double> inum;
 const double PI = acos(-1);
 const int INF = 2000000000;
 const ll LLINF = 20000000000000;
-const ll MAX = 1001; // depending on the problem
-const ll MOD = 1000000007; // depending on the problem
-
+const ll MAX = 501; // depending on the problem
+const ll MOD = 1000000009;; // depending on the problem
 
 
 int main() {
