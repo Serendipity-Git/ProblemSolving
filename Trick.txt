@@ -113,3 +113,32 @@ struct LineContainer : multiset<Line, less<>> {
 		return l.k * x + l.m;
 	}
 };
+
+
+// Knuth optimization
+// O(N^3) -> O(N^2)
+// 구간을 쪼개어가는 DP를 최적화한다
+
+1. DP[i][j]가 1<=i<=j<=n일때만 정의된다.
+2. DP[i][j] = min(DP[i][k] + DP[k][j]) + cost[i][j]
+a<=b<=c<=d 일때,
+3. cost[a][c] + cost[b][d] <= cost[a][d] + cost[b][c]
+4. cost[b][c] <= cost[a][d]
+
+라면 Knuth optimization을 이용할 수 있다.
+
+3번과 4번을 만족한다면, P[i][j]를 DP[i][j] 문제에서
+최소로 만드는 k의 값이라고 정의할 때,
+
+P[i][j-1] <= P[i][j] <= P[i+1][j]를 만족한다. (i<j)
+-> k값을 찾는데 범위를 줄여줌
+-> P[a][b]라고 하면 b-a가 커지는 순서로 루프를 돌려야함
+
+for (int j=1;j<=N;j++){ // j는 차이
+    for (int i=0;i+j<=N;i++){ // i는 시작 index
+        for (int k=key[i][i+j-1];k<=key[i+1][i+j];k++){
+            // k는 다음 최소값의 후보군이다.
+        }
+    }
+}
+
