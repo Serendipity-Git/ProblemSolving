@@ -11,9 +11,9 @@ typedef pair<int, int> pi;
 typedef pair<ll, ll> pii;
 typedef complex<double> inum;
 const double PI = acos(-1);
-const int INF = 2000000000;
-const ll LLINF = 20000000000000;
-const ll MAX = 501; // depending on the problem
+const int INF = INT_MAX;
+const ll LLINF = LLONG_MAX;
+const ll MAX = 8005; // depending on the problem
 const ll MOD = 1000000009;; // depending on the problem
 
 
