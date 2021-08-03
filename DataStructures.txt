@@ -70,3 +70,12 @@ ll sum(int left, int right, int from, int to, int node) {
     ll ret = sum(left, mid, from, to, node * 2) + sum(mid + 1, right, from, to, node * 2 + 1);
     return ret;
 }
+
+
+// Sparse Table
+범위 [L,R]이 주어졌을 때 Function(L,L+1,...,R)을 빠르게 한다
+조건1) Array에 저장된 값이 변하면 안된다.
+조건2) Function은 결합법칙이 성립해야 한다.
+
+-> Sparse table 만들기 O(NlogN)
+-> 쿼리 1개 처리 O(logN)

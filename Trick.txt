@@ -41,6 +41,9 @@ void convolution(vector<inum>& a, vector<inum>& b) {
     fft(a, true);
 }
 
+// Convex hull trick
+DP[i] = max(M[j]A[i] + B[j]) + C[i] (j<i)
+로 주어질 때, 사용 가능하다.
 
 // Convex hull trick
 // Can only use when M simply decreases/increases
@@ -55,7 +58,7 @@ struct line {
         return 1.0 * (other.n - n) / (m - other.m);
     }
 };
-void CHT{
+void CHT() {
     ll lo = 0;
     for (int i = 1; i <= N; i++) {
         line newline(M(j), N(j)); // depending on the problem
@@ -82,6 +85,8 @@ void CHT{
 // Online CHT O(nlogn)
 // Reference from https://github.com/kth-competitive-programming/kactl/blob/master/content/data-structures/LineContainer.h
 // MAX Convex Hull Trick API
+// To conver minCHT, input -m, -n and output -query.
+
 
 struct Line {
 	mutable ll k, m, p;
