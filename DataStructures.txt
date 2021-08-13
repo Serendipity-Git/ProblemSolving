@@ -9,6 +9,16 @@ int findRoot(int n) {
 	while (parent[n] != -1) { n = parent[n]; }
 	return n;
 }
+// findRoot 최적화 ( Advanced-Path Compression)
+int findRoot(int n){
+    if (parent[n]==-1){return n;}
+    return parent[n]=findRoot(parent[n]);
+}
+/// 원래 모양과는 다른 Union-Find 구조를 만든다.
+/// 하부 노드들의 parent를 위쪽으로 승격시켜주는 방법이다.
+/// 위쪽으로 승격시켜서 root node의 degree는 늘지만 height는 줄어들음
+/// 이걸 쓰면 findRoot와 makeUnion이 O(1)로 변한다.
+
 void makeUnion(int r1, int r2) {
 	if (r1 != r2) {
 		if (member[r1] < member[r2]) { swap(r1, r2); }
@@ -16,6 +26,7 @@ void makeUnion(int r1, int r2) {
 		member[r1] += member[r2];
 	}
 }
+
 
 
 // Penwick Tree
