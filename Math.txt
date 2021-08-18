@@ -2,17 +2,33 @@
 /* Number Theory */
 
 // Prime operations
-// Sieve of Erathosthenes O(nloglogn)
+// Sieve of Erathosthenes O(nlogn)
 vector<ll> prime;
-void PrimeGenerator() {
+void PrimeGenerator(ll N) {
     bool isprime[MAX + 1];
     memset(isprime, true, sizeof(isprime));
-    for (ll j = 2; j <= MAX; j++) {
+    for (ll j = 2; j <= N; j++) {
         if (isprime[j]) { 
             prime.push_back(j); 
-            for (ll i = j * j; i <= MAX; i += j) {
+            for (ll i = j * j; i <= N; i += j) {
                 isprime[i] = false;
             }
+        }
+    }
+}
+
+// Linear Sieve O(n)
+vector<ll> prime;
+void PrimeGenerator(ll N) {
+    bool isprime[MAX + 1];
+    memset(isprime, true, sizeof(isprime));
+    for (ll j = 2; j <= N; j++) {
+        if (isprime[j]) { 
+            prime.push_back(j); 
+            for (ll i=0;i<prime.size() && j*prime[i]<=N; ++i){
+				isprime[j*prime[i]]=true;
+				if (j%prime[i]==0) break;
+			}
         }
     }
 }
