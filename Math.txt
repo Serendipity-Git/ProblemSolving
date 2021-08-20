@@ -23,15 +23,33 @@ void PrimeGenerator(ll N) {
     bool isprime[MAX + 1];
     memset(isprime, true, sizeof(isprime));
     for (ll j = 2; j <= N; j++) {
-        if (isprime[j]) { 
-            prime.push_back(j); 
-            for (ll i=0;i<prime.size() && j*prime[i]<=N; ++i){
-				isprime[j*prime[i]]=true;
-				if (j%prime[i]==0) break;
-			}
+        if (isprime[j]) { prime.push_back(j); }
+        for (ll i = 0; i < prime.size() && j * prime[i] <= N; ++i) {
+            isprime[j * prime[i]] = false;
+            if (j % prime[i] == 0) break;
         }
     }
 }
+
+// Mobius Function Linear Sieve O(n)
+vector<ll> prime;
+ll Mobius[MAX];
+void MobiusGenerator(ll N) {
+    bool isprime[MAX + 1];
+    memset(isprime, true, sizeof(isprime));
+    for (ll j = 2; j <= N; j++) {
+        if (isprime[j]) { 
+            prime.push_back(j); 
+            Mobius[j] = -1;
+        }
+        for (ll i = 0; i < prime.size() && j * prime[i] <= N; ++i) {
+            isprime[j * prime[i]] = false;
+            if (j % prime[i] == 0) break;
+            Mobius[j * prime[i]] = -Mobius[j];
+        }
+    }
+}
+
 // GCD && LCM
 ll gcd (ll a, ll b) {
    if (a > b) { swap(a, b); }
