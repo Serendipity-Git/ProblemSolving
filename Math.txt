@@ -35,11 +35,12 @@ void PrimeGenerator(ll N) {
 vector<ll> prime;
 ll Mobius[MAX];
 void MobiusGenerator(ll N) {
+    Mobius[1] = 1;
     bool isprime[MAX + 1];
     memset(isprime, true, sizeof(isprime));
     for (ll j = 2; j <= N; j++) {
-        if (isprime[j]) { 
-            prime.push_back(j); 
+        if (isprime[j]) {
+            prime.push_back(j);
             Mobius[j] = -1;
         }
         for (ll i = 0; i < prime.size() && j * prime[i] <= N; ++i) {
