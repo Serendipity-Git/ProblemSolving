@@ -1,92 +1,53 @@
 // Suffix Array
 
-int N;
-int num[MAX + 1];
-int ISA[MAX];
-int lcp[MAX];
-int suffix[MAX];
-int suffixtmp[MAX];
-int group[MAX];
-int grouptmp[MAX];
-char input[MAX];
-void CountingSort(int from) {
-    int MAXI = max(300, N + 1);
-    memset(num, 0, sizeof(num));
-    for (int i = 0; i < N; i++) {
-        if (suffix[i] + from < N) { num[group[suffix[i] + from]]++; }
-        else { num[0]++; }
-    }
-    for (int i = 1; i < MAXI; i++) { num[i] += num[i - 1]; }
-    for (int i = N - 1; i >= 0; i--) {
-        if (suffix[i] + from < N) { suffixtmp[--num[group[suffix[i] + from]]] = suffix[i]; }
-        else { suffixtmp[--num[0]] = suffix[i]; }
-    }
+struct SuffixA {
+    ll SA[MAX], group[MAX];
+    ll N, K, k;
+    string S;
 
-    memset(num, 0, sizeof(num));
-    for (int i = 0; i < N; i++) { num[group[suffix[i]]]++; }
-    for (int i = 1; i < MAXI; i++) { num[i] += num[i - 1]; }
-    for (int i = N - 1; i >= 0; i--) { suffix[--num[group[suffixtmp[i]]]] = suffixtmp[i]; }
-}
-void SuffixArray() {
-    for (int i = 0; i < N; i++) { suffix[i] = i; group[i] = input[i]; }
-
-    for (int k = 1; k < N; k <<= 1) {
-        int r = 1;
-        CountingSort(k);
-
-        grouptmp[suffix[0]] = r;
+    SuffixA (string _S) {
+        S = _S + '$'; N = S.length();
+        vector<pair<char, int>> tmp(N);
+        for (int i = 0; i < N; i++) { tmp[i] = { S[i],i }; }
+        sort(tmp.begin(), tmp.end());
+        for (int i = 0; i < N; i++) { SA[i] = tmp[i].second; }
+        group[SA[0]] = 0;
         for (int i = 1; i < N; i++) {
-            bool same = true;
-            if (group[suffix[i]] == group[suffix[i - 1]]) {
-                int a = suffix[i] + k, b = suffix[i - 1] + k;
-                if (a >= N) { a = N; } if (b >= N) { b = N; }
-                if (group[a] != group[b]) { same = false; }
+            if (tmp[i].first == tmp[i - 1].first) { group[SA[i]] = group[SA[i - 1]]; }
+            else { group[SA[i]] = group[SA[i - 1]] + 1; }
+        }
+
+        for (k = 0; (1 << k) < N; k++) {
+            vector<pair<pair<int, int>, int>> vec(N), vec1(N), vec2(N);
+            for (int i = 0; i < N; i++) {
+                vec[i] = { {group[i],group[(i + (1 << k)) % N]},i };
             }
-            else { same = false; }
 
-            grouptmp[suffix[i]] = same ? r : ++r;
+            vector<int> cnt1(N), cnt2(N), p1(N), p2(N);
+            for (int i = 0; i < N; i++) { cnt2[vec[i].first.second]++; }
+            for (int i = 1; i < N; i++) { p2[i] = p2[i - 1] + cnt2[i - 1]; }
+            for (int i = 0; i < N; i++) {
+                ll p = vec[i].first.second;
+                vec1[p2[p]++] = vec[i];
+            }
+
+            for (int i = 0; i < N; i++) { cnt1[vec1[i].first.first]++; }
+            for (int i = 1; i < N; i++) { p1[i] = p1[i - 1] + cnt1[i - 1]; }
+            for (int i = 0; i < N; i++) {
+                ll p = vec1[i].first.first;
+                vec2[p1[p]++] = vec1[i];
+            }
+
+
+            for (int i = 0; i < N; i++) { SA[i] = vec2[i].second; }
+            group[SA[0]] = 0;
+            for (int i = 1; i < N; i++) {
+                if (vec2[i].first == vec2[i - 1].first) { group[SA[i]] = group[SA[i - 1]]; }
+                else { group[SA[i]] = group[SA[i - 1]] + 1; }
+            }
         }
-        for (int i = 0; i < N; i++) { group[i] = grouptmp[i]; }
-
-        if (group[suffix[N - 1]] == N) { break; }
     }
-}
-void LCP() {
-    int k = 0;
-    for (int i = 0; i < N; i++) { ISA[suffix[i]] = i; }
-    for (int i = 0; i < N; i++) {
-        int idx = ISA[i]; if (idx == 0) { lcp[0] = -1; k = 0; continue; }
-        while (k + i < N && k + suffix[idx - 1] < N &&
-            input[k + i] == input[k + suffix[idx - 1]]) {
-            k++;
-        }
-        lcp[ISA[i]] = k;
-        k = max(k - 1, 0);
-    }
-}
-pi stringMatching(const char* match, int l) {
-    pi ret;
-
-    int lo, hi, mid;
-    lo = 0; hi = N - 1;
-    while (lo < hi) {
-        mid = (lo + hi) / 2;
-        if (strncmp(input + suffix[mid], match, l) >= 0) { hi = mid; }
-        else { lo = mid + 1; }
-    }
-    if (strncmp(input + suffix[lo], match, l) != 0) { ret.first = -1; }
-    else { ret.first = lo; }
-
-    lo = 0; hi = N - 1;
-    while (lo < hi) {
-        mid = (lo + hi + 1) / 2;
-        if (strncmp(input + suffix[mid], match, l) <= 0) { lo = mid; }
-        else { hi = mid - 1; }
-    }
-    if (strncmp(input + suffix[lo], match, l) != 0) { ret.second = -1; }
-    else { ret.second = lo; }
-    return ret;
-}
+};
 
 
 // KMP Algorithm
