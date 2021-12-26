@@ -184,6 +184,16 @@ int bitReverse(int n, int k) {
 int firstbit1_pow2(int k) {
     return k & -k;
 }
+bool isbit0(ll n, ll m) {
+    n >>= m;
+    if (n & 1) { return false; }
+    return true;
+}
+bool isbit1(ll n, ll m) {
+    n >>= m;
+    if (n & 1) { return true; }
+    return false;
+}
 
 // power(X,Y) O(logY)
 ll power(ll x, ll y) {
