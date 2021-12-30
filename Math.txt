@@ -205,6 +205,10 @@ ll power(ll x, ll y) {
         return ret;
     }
 }
+// divide(X,X,MOD) O(logMOD)
+ll divide(ll x, ll y, ll mod) {
+    return x * power(y, mod - 2) % mod;
+}
 
 // Binary search
 int lower_bound(int n){
