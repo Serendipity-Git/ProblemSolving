@@ -205,7 +205,9 @@ ll power(ll x, ll y) {
         return ret;
     }
 }
-// divide(X,X,MOD) O(logMOD)
+
+// divide(X,Y,MOD) O(logMOD)
+// MOD 소수이고 Y와 MOD가 서로소일때
 ll divide(ll x, ll y, ll mod) {
     return x * power(y, mod - 2) % mod;
 }
