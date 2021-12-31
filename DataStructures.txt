@@ -20,37 +20,51 @@ struct DSU {
 
 
 // Penwick Tree
-ll a[MAX + 1] = { 0, };
-ll s[MAX + 1] = { 0, };
-ll tree[MAX + 1];
-ll firstbit1_pow2(ll k) { return k & -k; }
-void penwick() {
-    for (int i = 1; i <= N; i++) { s[i] = s[i - 1] + a[i]; }
-    for (int i = 1; i <= N; i++) {
-        ll p = firstbit1_pow2(i);
-        tree[i] = s[i] - s[i - p];
+// 구간의 합을 구할수 있다
+struct penwick {
+    ll N;
+    vector<ll> a, s, tree;
+    // 사이즈 n짜리의 penwick tree를 만들어준다.
+    // 1-base index 사용했다
+    penwick(ll n) {
+        N = n;
+        a.resize(n + 1);
+        s.resize(n + 1);
+        tree.resize(n + 1);
+        for (int i = 1; i <= n; i++) { s[i] = s[i - 1] + a[i]; }
+        for (int i = 1; i <= n; i++) {
+            ll p = firstbit1_pow2(i);
+            tree[i] = s[i] - s[i - p];
+        }
     }
-}
-ll sum(ll n) {
-    ll ret = 0;
-    while (n >= 1) {
-        ret += tree[n];
-        n -= firstbit1_pow2(n);
+    ll firstbit1_pow2(ll k) { return k & -k; }
+    ll sum(ll n) {
+        ll ret = 0;
+        while (n >= 1) {
+            ret += tree[n];
+            n -= firstbit1_pow2(n);
+        }
+        return ret;
     }
-    return ret;
-}
-void update(ll n, ll x) {
-    a[n] += x;
-    while (n <= N) {
-        tree[n] += x;
-        n += firstbit1_pow2(n);
+    // update(n,x) : n번째 원소의 값을 x로 바꿔준다
+    void update(ll n, ll x) {
+        ll d = x - a[n];
+        a[n] += d;
+        while (n <= N) {
+            tree[n] += d;
+            n += firstbit1_pow2(n);
+        }
     }
-}
+    // sum(l,r) : l부터 r까지의 합을 구해준다
+    ll sum(ll l, ll r) {
+        return sum(r) - sum(l - 1);
+    }
+};
 
 // Segment Tree - 구간 [L,R]에 관련된 쿼리를 반복적으로 처리해야 할 때 생각한다.
 
 ll A[MAX];
-ll Segtree[3 * MAX];
+ll Segtree[4 * MAX];
 void maketree(int left, int right, int node) {
     if (left == right) { Segtree[node] = A[left]; return; }
     int mid = (left + right) / 2;
@@ -82,7 +96,7 @@ ll sum(ll from, ll to) { return sum(1, N, from, to, 1); }
 
 
 ll A[MAX];
-ll segtree[3 * MAX], lazy[3 * MAX];
+ll segtree[4 * MAX], lazy[4 * MAX];
 
 void maketree(ll l, ll r, ll node) {
     if (l == r) { segtree[node] = A[l]; return; }
