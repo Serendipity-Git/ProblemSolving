@@ -31,18 +31,13 @@ struct penwick {
         a.resize(n + 1);
         s.resize(n + 1);
         tree.resize(n + 1);
-        for (int i = 1; i <= n; i++) { s[i] = s[i - 1] + a[i]; }
-        for (int i = 1; i <= n; i++) {
-            ll p = firstbit1_pow2(i);
-            tree[i] = s[i] - s[i - p];
-        }
     }
     ll firstbit1_pow2(ll k) { return k & -k; }
     ll sum(ll n) {
         ll ret = 0;
         while (n >= 1) {
             ret += tree[n];
-            n -= firstbit1_pow2(n);
+            n -= (n & -n);
         }
         return ret;
     }
@@ -52,7 +47,7 @@ struct penwick {
         a[n] += d;
         while (n <= N) {
             tree[n] += d;
-            n += firstbit1_pow2(n);
+            n += (n & -n);
         }
     }
     // sum(l,r) : l부터 r까지의 합을 구해준다
@@ -60,7 +55,6 @@ struct penwick {
         return sum(r) - sum(l - 1);
     }
 };
-
 // Segment Tree - 구간 [L,R]에 관련된 쿼리를 반복적으로 처리해야 할 때 생각한다.
 
 ll A[MAX];
