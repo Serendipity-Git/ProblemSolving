@@ -1,8 +1,14 @@
 // UnionFind
 struct DSU {
     int N;
-    int parent[MAX], member[MAX];
-    DSU(int n) { N = n; for (int i = 0; i < N; i++) { parent[i] = -1; member[i] = 1; } }
+    vector<ll> parent, member;
+    DSU() { N = 0; }
+    DSU(int n) {
+        N = n;
+        parent.resize(n);
+        member.resize(n);
+        for (int i = 0; i < n; i++) { parent[i] = -1; member[i] = 1; }
+    }
     int findRoot(int n) {
         if (parent[n] == -1) { return n; }
         return parent[n] = findRoot(parent[n]);
@@ -13,10 +19,9 @@ struct DSU {
         if (r1 == r2) { return; }
         if (member[r1] < member[r2]) { swap(r1, r2); }
         parent[r2] = r1;
-        member[r1] += member[r2];     
+        member[r1] += member[r2];
     }
 };
-
 
 
 // Penwick Tree
@@ -32,7 +37,6 @@ struct penwick {
         s.resize(n + 1);
         tree.resize(n + 1);
     }
-    ll firstbit1_pow2(ll k) { return k & -k; }
     ll sum(ll n) {
         ll ret = 0;
         while (n >= 1) {
