@@ -1,0 +1,40 @@
+struct dijkstra {
+    ll s;
+    vector<vector<ll>> adj;
+    vector<vector<ll>> cost;
+    vector<ll> dist;
+    priority_queue<pii> pq;
+
+
+    dijkstra() { s = 0; }
+    dijkstra(ll n, ll _s) {
+        adj.resize(n);
+        dist.resize(n);
+        cost.resize(n);
+        dist.resize(n);
+        for (int i = 0; i < n; i++) { dist[i] = LLINF; }
+        s = _s;
+    }
+    
+    // u->v로 가는, 가중치 c의 edge를 생성한다
+    void addEdge(ll u, ll v, ll c) {
+        adj[u].push_back(v);
+        cost[u].push_back(c);
+    }
+
+    // dijkstra를 수행한다
+    void find() { 
+        pq.push(make_pair(0, s));
+        while (!pq.empty()) {
+            pii tmp = pq.top(); pq.pop();
+            ll cur = tmp.second;
+            if (dist[cur] != LLINF) { continue; }
+            dist[cur] = -tmp.first;
+            for (int i = 0; i < adj[cur].size(); i++) {
+                if (dist[adj[cur][i]] == LLINF) {
+                    pq.push(make_pair(-dist[cur] - cost[cur][i], adj[cur][i]));
+                }
+            }
+        }
+    }
+};
