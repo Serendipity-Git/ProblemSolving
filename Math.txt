@@ -120,7 +120,6 @@ ll Fibonacci(int N){
 ////////////////////
 /* Linear Algebra */
 
-// Matrix operations
 struct Matrix {
 	int r, c;
 	vector<vector<ll>> mat;
@@ -134,13 +133,14 @@ struct Matrix {
 			for (int i = 0; i < c; i++) { mat[j][i] = 0; }
 		}
 	}
-	void identity() {		
-		for (int i = 0; i < r; i++) { mat[i][i] = 1; }	
+	void identity() {
+		for (int i = 0; i < r; i++) { mat[i][i] = 1; }
 	}
 	void add(Matrix& other) {
 		for (int j = 0; j < r; j++) {
 			for (int i = 0; i < c; i++) {
 				mat[j][i] += other.mat[j][i];
+				mat[j][i]%=MOD;
 			}
 		}
 	}
@@ -148,6 +148,7 @@ struct Matrix {
 		for (int j = 0; j < r; j++) {
 			for (int i = 0; i < c; i++) {
 				mat[j][i] -= other.mat[j][i];
+				(mat[j][i]+MOD)%MOD;
 			}
 		}
 	}
@@ -163,12 +164,30 @@ struct Matrix {
 				}
 			}
 		}
+		c = other.c;
 		mat = ret;
 	}
+    void pow(ll n){
+        Matrix ret(r,r), tmp(r,r);
+        ret.identity();
+        for (int j=0;j<r;j++){
+            for (int i=0;i<c;i++){
+                tmp.mat[j][i]+=mat[j][i];
+            }
+        }
+
+        while(n){
+            if (n&1){
+                ret.mul(tmp);
+            }
+            tmp.mul(tmp);
+            n>>=1;
+        }
+        mat=ret.mat;
+    }
 
 	// matrix inverse not yet
 };
-
 
 ///////////////////
 /* Discrete Math */
