@@ -24,15 +24,16 @@ struct dijkstra {
 
     // dijkstra를 수행한다
     void find() { 
+        dist[s]=0;
         pq.push(make_pair(0, s));
         while (!pq.empty()) {
             pii tmp = pq.top(); pq.pop();
             ll cur = tmp.second;
-            if (dist[cur] != LLINF) { continue; }
-            dist[cur] = -tmp.first;
+            if (dist[cur] < -tmp.first) { continue; }
             for (int i = 0; i < adj[cur].size(); i++) {
-                if (dist[adj[cur][i]] == LLINF) {
+                if (dist[adj[cur][i]] > dist[cur] + cost[cur][i]) {
                     pq.push(make_pair(-dist[cur] - cost[cur][i], adj[cur][i]));
+                    dist[adj[cur][i]] = dist[cur]+cost[cur][i];
                 }
             }
         }
