@@ -200,8 +200,11 @@ int bitReverse(int n, int k) {
     }
     return ret;
 }
-int firstbit1_pow2(int k) {
-    return k & -k;
+int firstbit1_pow2(int n) { // n에서 비트1인 위치를 구해서 그 수를 구함
+    return n & -n;
+}
+int eraselast(int n) { // n에서 가장 처음으로 등장하는 비트1을 지운 수를 구함
+    return n &= (n-1);
 }
 bool isbit0(ll n, ll m) {
     n >>= m;
@@ -213,6 +216,11 @@ bool isbit1(ll n, ll m) {
     if (n & 1) { return true; }
     return false;
 }
+
+
+__popcnt(ll n) // n에서의 비트1의 개수를 세줌
+_BitScanForward(ll& idx, ll n) // n에서 처음 1이 나오기까지의 0의 개수를 idx로 return한다
+
 
 // power(X,Y) O(logY)
 ll power(ll x, ll y) {
