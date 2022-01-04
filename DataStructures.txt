@@ -256,7 +256,98 @@ struct lazy_sumseg {
     void maketree() { maketree(1, N, 1); }
     void update(int from, int to, ll inc) { update(1, N, from, to, inc, 1); }
     ll query(int from, int to) { return query(1, N, from, to, 1); }
+};
 
+struct lazy_maxseg {
+    int N;
+    vector<ll> a, seg, lazy;
+    lazy_minseg() { N = 0; }
+    lazy_minseg(int n) {
+        N = n;
+        a.resize(n + 1);
+        seg.resize(4 * n + 4);
+        lazy.resize(4 * n + 4);
+    }
+
+    void maketree(int l, int r, int node) {
+        if (l == r) { seg[node] = a[l]; return; }
+        int mid = (l + r) >> 1;
+        maketree(l, mid, node * 2);
+        maketree(mid + 1, r, node * 2 + 1);
+        seg[node] = max(seg[node * 2], seg[node * 2 + 1]);
+    }
+    void propagate(int l, int r, int node) {
+        if (l == r) { seg[node] += lazy[node]; lazy[node] = 0; return; }
+        seg[node] += lazy[node];
+        lazy[node * 2] += lazy[node];
+        lazy[node * 2 + 1] += lazy[node];
+        lazy[node] = 0;
+    }
+    void update(int l, int r, int from, int to, ll inc, int node) {
+        propagate(l, r, node);
+        if (from <= l && r <= to) { lazy[node] += inc; propagate(l, r, node); return; }
+        if (from > r || to < l) { return; }
+        int mid = (l + r) >> 1;
+        update(l, mid, from, to, inc, node * 2);
+        update(mid + 1, r, from, to, inc, node * 2 + 1);
+        seg[node] = max(seg[node * 2], seg[node * 2 + 1]);
+    }
+    ll query(int l, int r, int from, int to, int node) {
+        propagate(l, r, node);
+        if (from <= l && r <= to) { return seg[node]; }
+        if (from > r || to < l) { return -LLINF; }
+        int mid = (l + r) >> 1;
+        return max(query(l, mid, from, to, node * 2), query(mid + 1, r, from, to, node * 2 + 1));
+    }
+    void maketree() { maketree(1, N, 1); }
+    void update(int from, int to, ll inc) { update(1, N, from, to, inc, 1); }
+    ll query(int from, int to) { return query(1, N, from, to, 1); }
+};
+
+struct lazy_minseg {
+    int N;
+    vector<ll> a, seg, lazy;
+    lazy_minseg() { N = 0; }
+    lazy_minseg(int n) {
+        N = n;
+        a.resize(n + 1);
+        seg.resize(4 * n + 4);
+        lazy.resize(4 * n + 4);
+    }
+
+    void maketree(int l, int r, int node) {
+        if (l == r) { seg[node] = a[l]; return; }
+        int mid = (l + r) >> 1;
+        maketree(l, mid, node * 2);
+        maketree(mid + 1, r, node * 2 + 1);
+        seg[node] = min(seg[node * 2], seg[node * 2 + 1]);
+    }
+    void propagate(int l, int r, int node) {
+        if (l == r) { seg[node] += lazy[node]; lazy[node] = 0; return; }
+        seg[node] += lazy[node];
+        lazy[node * 2] += lazy[node];
+        lazy[node * 2 + 1] += lazy[node];
+        lazy[node] = 0;
+    }
+    void update(int l, int r, int from, int to, ll inc, int node) {
+        propagate(l, r, node);
+        if (from <= l && r <= to) { lazy[node] += inc; propagate(l, r, node); return; }
+        if (from > r || to < l) { return; }
+        int mid = (l + r) >> 1;
+        update(l, mid, from, to, inc, node * 2);
+        update(mid + 1, r, from, to, inc, node * 2 + 1);
+        seg[node] = min(seg[node * 2], seg[node * 2 + 1]);
+    }
+    ll query(int l, int r, int from, int to, int node) {
+        propagate(l, r, node);
+        if (from <= l && r <= to) { return seg[node]; }
+        if (from > r || to < l) { return LLINF; }
+        int mid = (l + r) >> 1;
+        return min(query(l, mid, from, to, node * 2), query(mid + 1, r, from, to, node * 2 + 1));
+    }
+    void maketree() { maketree(1, N, 1); }
+    void update(int from, int to, ll inc) { update(1, N, from, to, inc, 1); }
+    ll query(int from, int to) { return query(1, N, from, to, 1); }
 };
 
 
