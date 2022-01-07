@@ -358,6 +358,77 @@ struct lazy_minseg {
 범위 [L,R]이 주어졌을 때 Function(L,L+1,...,R)을 빠르게 한다
 조건1) Array에 저장된 값이 변하면 안된다.
 조건2) Function은 결합법칙이 성립해야 한다.
-
 -> Sparse table 만들기 O(NlogN)
--> 쿼리 1개 처리 O(logN)
+-> 쿼리 1개 처리 O(logN) // O(1)
+
+struct minsps {
+    ll N;
+    vector<ll> a;
+    vector<vector<ll>> v;
+
+    minsps() { N = 0; }
+    minsps(ll n) {
+        N = n;
+        a.resize(n);
+        v.resize(log2(n) + 1);
+        for (int j = 0; j < v.size(); j++) {
+            v[j].resize(n);
+        }
+    }
+
+    void init() {
+        for (int i = 0; i < N; i++) { v[0][i] = a[i]; }
+        for (int k = 1; (1LL << k) < N; k++) {
+            for (int i = 0; i + (1LL << (k - 1)) < N; i++) {
+                v[k][i] = min(v[k - 1][i], v[k - 1][i + (1LL << (k - 1))]);
+            }
+        }
+    }
+
+    ll query(ll l, ll r) {
+        ll D = r - l + 1;
+        ll cnt = 0;
+        while (D != 1) {
+            ++cnt; D >>= 1;
+        }
+        return min(v[cnt][l], v[cnt][r + 1 - (1LL << cnt)]);
+    }
+};
+
+struct maxsps {
+    ll N;
+    vector<ll> a;
+    vector<vector<ll>> v;
+
+    maxsps() { N = 0; }
+    maxsps(ll n) {
+        N = n;
+        a.resize(n);
+        v.resize(log2(n) + 1);
+        for (int j = 0; j < v.size(); j++) {
+            v[j].resize(n);
+        }
+    }
+
+    void init() {
+        for (int i = 0; i < N; i++) { v[0][i] = a[i]; }
+        for (int k = 1; (1LL << k) < N; k++) {
+            for (int i = 0; i + (1LL << (k - 1)) < N; i++) {
+                v[k][i] = max(v[k - 1][i], v[k - 1][i + (1LL << (k - 1))]);
+            }
+        }
+    }
+
+    ll query(ll l, ll r) {
+        ll D = r - l + 1;
+        ll cnt = 0;
+        while (D != 1) {
+            ++cnt; D >>= 1;
+        }
+        return max(v[cnt][l], v[cnt][r + 1 - (1LL << cnt)]);
+    }
+};
+
+
+
+
