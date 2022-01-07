@@ -52,6 +52,7 @@ void MobiusGenerator(ll N) {
 }
 
 // GCD && LCM
+
 ll gcd (ll a, ll b) {
    if (a > b) { swap(a, b); }
    if (a == 0) return b;
@@ -59,6 +60,21 @@ ll gcd (ll a, ll b) {
 }
 ll LCM(ll a, ll b){
 	return a*b/gcd(a,b);
+}
+
+// 확장 유클리드 알고리즘
+// a,b의 gcd를 구해줄 뿐만 아니라
+// ax+by = gcd(a,b)의 x,y 값까지 구해준다
+ll ex_gcd(ll a, ll b, ll& x, ll& y) {
+    x = 1, y = 0;
+    ll x1 = 0, y1 = 1, a1 = a, b1 = b;
+    while (b1) {
+        ll q = a1 / b1;
+        tie(x, x1) = make_tuple(x1, x - q * x1);
+        tie(y, y1) = make_tuple(y1, y - q * y1);
+        tie(a1, b1) = make_tuple(b1, a1 - q * b1);
+    }
+    return a1;
 }
 
 
