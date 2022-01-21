@@ -33,7 +33,9 @@ void solve() {
 int main() {
     fastio;
 
-    int tc; cin >> tc; while (tc--) {
+    int tc=1; 
+    cin >> tc; 
+    while (tc--) {
         solve();
     }
 
