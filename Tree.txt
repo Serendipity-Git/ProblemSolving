@@ -1,47 +1,169 @@
-// LCA query
+// 0-based 사용했다
+// init(x) : x를 루트로 하는 rooted tree 만들어준다
+// lca(u,v) : u와 v의 lca를 찾아준다. O(logn)
+// dist(u,v) : u와 v의 거리를 찾아준다. O(logn)
 
-int depth[MAX];
-int table[18][MAX];
-vector<int> adj[MAX];
-void maketree(int n, int prev, int cnt) {
-    depth[n] = cnt;
-    table[0][n] = prev;
-    for (auto it : adj[n]) {
-        if (it == prev) { continue; }
-        maketree(it, n, cnt + 1);
+struct Tree{
+    int N,M;
+    vector<vector<int>> adj;
+    vector<vector<int>> C;
+    vector<vector<int>> sps;
+    vector<int> H,P;
+
+    Tree(){N=M=0;}
+    Tree(int n){
+        N=n; M=0;
+        adj.resize(N);
+        C.resize(N);
+        H.resize(N);
+        P.resize(N);
+        int tmp=1;
+        while(tmp<N){tmp<<=1;++M;}
+        sps.resize(M);
+        for (int j=0;j<M;j++){sps[j].resize(N);}
+        for (int i=0;i<N;i++){H[i]=-1;}
     }
-}
-void settable() {
-    for (int k = 1; k < 18; k++) {
-        for (int i = 0; i < N; i++) {
-            table[k][i] = table[k - 1][table[k - 1][i]];
+
+    void add(int a, int b){
+        adj[a].push_back(b);
+        adj[b].push_back(a);
+    }
+
+    void init(int root){
+        H[root]=0;
+        dfs(0);
+
+        for (int j=1;j<M;j++){
+            for (int i=0;i<N;i++){
+                sps[j][i] = sps[j-1][sps[j-1][i]];
+            }
         }
     }
-}
-int mymove(int cur, int n) {
-    int ret = cur;
-    int cnt = 0;
-    while (n) {
-        if (n % 2) { ret = table[cnt][ret]; }
-        n >>= 1;
-        ++cnt;
-    }
-    return ret;
-}
-int getparent(int a, int b) {
-    if (depth[a] > depth[b]) { swap(a, b); }
-    b = mymove(b, depth[b] - depth[a]);
-    if (a == b) { return a; }
-    int cnt = 0;
-    while ((1 << cnt) <= max(depth[b], depth[a])) { ++cnt; }
-    --cnt;
 
-    while (cnt >= 0) {
-        if (table[cnt][a] != table[cnt][b]) {
-            a = table[cnt][a];
-            b = table[cnt][b];
+    void dfs(int n){
+        for (auto& it:adj[n]){
+            if (H[it]==-1){
+                C[n].push_back(it);
+                P[it]=n;
+                H[it]=H[n]+1;
+                sps[0][it]=n;
+                dfs(it);
+            }
         }
-        --cnt;
     }
-    return table[0][a];
-}
+
+    int lca(int u, int v){
+        if (H[u]>H[v]){swap(u,v);}
+        int d = H[v]-H[u];
+        if (d>0){
+            for (int j=M-1;j>=0;j--){
+                if (d>=(1<<j)){
+                    d-=(1<<j);
+                    v = sps[j][v];
+                }
+            }
+        }
+
+        if (u==v){return u;}
+        for (int j=M-1;j>=0;j--){
+            if (sps[j][u]!=sps[j][v]){
+                u = sps[j][u];
+                v = sps[j][v];
+            }
+        }
+        return sps[0][u];
+    }
+
+    int dist(int u , int v){
+        int p = lca(u,v);
+        return H[u]+H[v]-2*H[p];
+    }
+
+};
+
+
+// 0-based 사용했다
+// dist(u,v) : u와 v의 weighted한 거리를 찾아준다. O(logn)
+struct Weighted_Tree{
+    int N,M;
+    vector<vector<pii>> adj;
+    vector<vector<pii>> C;
+    vector<vector<int>> sps;
+    vector<vector<ll>> dsps;
+    vector<int> H,P;
+    vector<ll> D;
+
+    Weighted_Tree(){N=M=0;}
+    Weighted_Tree(int n){
+        N=n; M=0;
+        adj.resize(N);
+        C.resize(N);
+        H.resize(N);
+        P.resize(N);
+        D.resize(N);
+        int tmp=1;
+        while(tmp<N){tmp<<=1;++M;}
+        sps.resize(M);
+        dsps.resize(M);
+        for (int j=0;j<M;j++){sps[j].resize(N);dsps[j].resize(N);}
+        for (int i=0;i<N;i++){H[i]=-1;}
+    }
+
+    void add(int a, int b, int w){
+        adj[a].push_back({b,w});
+        adj[b].push_back({a,w});
+    }
+
+    void init(int root){
+        H[root]=0; D[root]=0;
+        dfs(0);
+
+        for (int j=1;j<M;j++){
+            for (int i=0;i<N;i++){
+                sps[j][i] = sps[j-1][sps[j-1][i]];
+                dsps[j][i] = dsps[j-1][i] + dsps[j-1][sps[j-1][i]];
+            }
+        }
+    }
+
+    void dfs(int n){
+        for (auto& it:adj[n]){
+            if (H[it.first]==-1){
+                C[n].push_back(it);
+                P[it.first]=n;
+                H[it.first]=H[n]+1;
+                D[it.first]=D[n]+it.second;
+                sps[0][it.first]=n;
+                dfs(it.first);
+            }
+        }
+    }
+
+    int lca(int u, int v){
+        if (H[u]>H[v]){swap(u,v);}
+        int d = H[v]-H[u];
+        if (d>0){
+            for (int j=M-1;j>=0;j--){
+                if (d>=(1<<j)){
+                    d-=(1<<j);
+                    v = sps[j][v];
+                }
+            }
+        }
+
+        if (u==v){return u;}
+        for (int j=M-1;j>=0;j--){
+            if (sps[j][u]!=sps[j][v]){
+                u = sps[j][u];
+                v = sps[j][v];
+            }
+        }
+        return sps[0][u];
+    }
+
+    ll dist(int u , int v){
+        int p = lca(u,v);
+        return D[u]+D[v]-2*D[p];
+    }
+
+};
