@@ -1,3 +1,4 @@
+// 0-based 사용했다
 struct dijkstra {
     ll s;
     vector<vector<ll>> adj;
@@ -38,4 +39,58 @@ struct dijkstra {
             }
         }
     }
+};
+
+
+// 1-based 사용했다
+struct SCC{
+    int N,cnt,scnt;
+    vector<vector<int>> adj;
+    vector<int> dfsn,scc;
+    stack<int> stk;
+
+    SCC(){N=cnt=scnt=0;}
+    SCC(int n){
+        N=n;
+        cnt=scnt=0;
+        adj.resize(N+1);
+        dfsn.resize(N+1);
+        scc.resize(N+1);
+        for (int i=1;i<=N;i++){
+            dfsn[i]=scc[i]=-1;
+        }
+    }
+
+    void addEdge(int u, int v){
+        adj[u].push_back(v);
+    }
+
+    void init(){
+        for (int i=1;i<=N;i++){
+            if (dfsn[i]==-1){dfs(i);}
+        }
+    }
+
+    int dfs(int n){
+        dfsn[n]=cnt; ++cnt; stk.push(n);
+
+        int ret = dfsn[n];
+        for (auto& it:adj[n]){
+            if (dfsn[it]==-1){ret=min(ret,dfs(it));}
+            else{
+                if (scc[it]==-1){ret=min(ret,dfsn[it]);}
+            }
+        }
+
+        if (ret==dfsn[n]){
+            while(!stk.empty()){
+                int tmp = stk.top(); stk.pop();
+                scc[tmp]=scnt;
+                if (tmp==n){break;}
+            }
+            scnt++;
+        }
+        return ret;
+    }   
+
 };
