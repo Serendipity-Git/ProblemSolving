@@ -1,121 +1,142 @@
 // Dinic algorithm O(V^2*E)
+// 0-based이다
+// 단방향 그래프이다
 
-struct Edge {
-	ll to, cap, flow;
-	Edge* reverse;
-	Edge(ll _to, ll _cap) : to(_to), cap(_cap), flow(0) {}
-	ll spare() { return cap - flow; }
-	void add(ll f) {
-		this->flow += f;
-		reverse->flow -= f;
-	}
+struct Edge{
+    int to;
+    ll c,f;
+    Edge* reverse;
+    Edge(int _to, ll _c) : to(_to), c(_c), f(0) {}
+    ll spare() { return c - f; }
+    void add(ll inc) {
+        f+=inc;
+        reverse->f -= inc;
+    }
 };
+struct maxflow{
+    int N,s,t;
+    vector<vector<Edge*>> adj;
+    vector<int> level,see;
+    queue<int> que;
 
-ll N, M, s, t;
-ll level[MAX];
-ll see[MAX];
-queue<ll> myqueue;
-vector<Edge*> adj[MAX];
-
-// if undirected, change e2.cap -> cap
-void addEdge(ll from, ll to, ll cap) {
-	Edge* e1 = new Edge(to, cap);
-	Edge* e2 = new Edge(from, 0);
-	e1->reverse = e2; e2->reverse = e1;
-	adj[from].push_back(e1);
-	adj[to].push_back(e2);
-}
-bool bfs() {
-	memset(level, -1, sizeof(level));
-	level[s] = 0; myqueue.push(s);
-	while (!myqueue.empty()) {
-		ll cur = myqueue.front(); myqueue.pop();
-		for (auto it : adj[cur]) {
-			if (it->spare() > 0 && level[it->to] == -1) {
-				myqueue.push(it->to); level[it->to] = level[cur] + 1;
-			}
-		}
-	}
-	if (level[t] == -1) { return false; }
-	return true;
-}
-ll dfs(ll n, ll flow) {
-	if (n == t) { return flow; }
-	for (ll& i = see[n]; i < (ll)adj[n].size(); i++) {
-		ll next = adj[n][i]->to;
-		if (adj[n][i]->spare() > 0 && level[next] == level[n] + 1) {
-			ll f = dfs(next, min(flow, adj[n][i]->spare()));
-			if (f > 0) { adj[n][i]->add(f); return f; }
-		}
-	}
-	return 0;
-}
-ll dinic() {
-	ll ret = 0;
-	while (bfs()) {
-		memset(see, 0, sizeof(see));
-		while (true) {
-			ll f = dfs(s, INF);
-			if (f == 0) { break; }
-			ret += f;
-		}
-	}
-	return ret;
-}
-
+    maxflow(){N=s=t=0;}
+    maxflow(int n, int _s, int _t){
+        N=n;s=_s;t=_t;
+        adj.resize(N);
+        level.resize(N);
+        see.resize(N);
+    }
+    void addEdge(int u, int v, ll c) {
+        Edge* e1 = new Edge(v, c);
+        Edge* e2 = new Edge(u, 0);
+        e1->reverse = e2; e2->reverse = e1;
+        adj[u].push_back(e1);
+        adj[v].push_back(e2);
+    }
+    bool bfs() {
+        for (int i=0;i<N;i++){level[i]=-1;}
+        level[s] = 0; que.push(s);
+        while (!que.empty()) {
+            ll cur = que.front(); que.pop();
+            for (auto it : adj[cur]) {
+                if (it->spare() > 0 && level[it->to] == -1) {
+                    que.push(it->to); level[it->to] = level[cur] + 1;
+                }
+            }
+        }
+        if (level[t] == -1) { return false; }
+        return true;
+    }
+    ll dfs(int n, ll flow) {
+        if (n == t) { return flow; }
+        for (int& i = see[n]; i < (int)adj[n].size(); i++) {
+            int next = adj[n][i]->to;
+            if (adj[n][i]->spare() > 0 && level[next] == level[n] + 1) {
+                int f = dfs(next, min(flow, adj[n][i]->spare()));
+                if (f > 0) { adj[n][i]->add(f); return f; }
+            }
+        }
+        return 0;
+    }
+    ll query() {
+        ll ret = 0;
+        while (bfs()) {
+            for (int i=0;i<N;i++){see[i]=0;}
+            while (true) {
+                ll f = dfs(s, INF);
+                if (f == 0) { break; }
+                ret += f;
+            }
+        }
+        return ret;
+    }
+};
 
 
 // Hopcroft-Karp O(E*sqrt(V))
+// 0-based이다
+// 양방향이다
+// L->R로만 edge를 추가해주면 된다
 
-ll N, M;
-ll L[MAX];
-ll R[MAX];
-ll level[MAX];
-ll see[MAX];
-vector<ll> adj[MAX];
-queue<ll> myqueue;
+struct bimatch{
+    int N,M;
+    vector<int> L,R,level,see;
+    vector<vector<int>> adj;
+    queue<int> que;
 
-bool dfs(ll n) {
-	for (; see[n] < adj[n].size(); see[n]++) {
-		ll it = adj[n][see[n]];
-		if (R[it] == -1 || level[R[it]] == level[n] + 1 && dfs(R[it])) {
-			L[n] = it;
-			R[it] = n;
-			return true;
-		}
-	}
-	return false;
-}
-void bfs() {
-	for (ll i = 0; i < N; i++) {
-		if (L[i] == -1) { myqueue.push(i); level[i] = 0; }
-		else { level[i] = INF; }
-		see[i] = 0;
-	}
-	while (!myqueue.empty()) {
-		ll cur = myqueue.front(); myqueue.pop();
-		for (auto it : adj[cur]) {
-			if (R[it] != -1 && level[R[it]] == INF) {
-				myqueue.push(R[it]); level[R[it]] = level[cur] + 1;
-			}
-		}
-	}
-}
-ll hopcroft() {
-	ll ret = 0;
-	memset(L, -1, sizeof(L));
-	memset(R, -1, sizeof(R));
-	while (true) {
-		bfs();
-		ll flow = 0;
-		for (ll i = 0; i < N; i++) {
-			if (L[i] == -1 && dfs(i)) { ++flow; }
-		}
-		if (flow == 0) { break; }
-		ret += flow;
-	}
-	return ret;
-}
+    bimatch(){N=M=0;}
+    bimatch(int n, int m){
+        N=n; M=m;
+        L.resize(N); R.resize(M);
+        level.resize(N); see.resize(N);
+        adj.resize(N);
+    }
+    void addEdge(int u, int v){
+        adj[u].push_back(v);
+    }
+    bool dfs(int n) {
+        for (; see[n] < adj[n].size(); see[n]++) {
+            int it = adj[n][see[n]];
+            if (R[it] == -1 || level[R[it]] == level[n] + 1 && dfs(R[it])) {
+                L[n] = it;
+                R[it] = n;
+                return true;
+            }
+        }
+        return false;
+    }
+    void bfs() {
+        for (int i = 0; i < N; i++) {
+            if (L[i] == -1) { que.push(i); level[i] = 0; }
+            else { level[i] = INF; }
+            see[i] = 0;
+        }
+        while (!que.empty()) {
+            int cur = que.front(); que.pop();
+            for (auto it : adj[cur]) {
+                if (R[it] != -1 && level[R[it]] == INF) {
+                    que.push(R[it]); level[R[it]] = level[cur] + 1;
+                }
+            }
+        }
+    }
+    ll query() {
+        ll ret = 0;
+        for (int i=0;i<N;i++){L[i]=-1;}
+        for (int i=0;i<M;i++){R[i]=-1;}
+        while (true) {
+            bfs();
+            ll flow = 0;
+            for (int i = 0; i < N; i++) {
+                if (L[i] == -1 && dfs(i)) { ++flow; }
+            }
+            if (flow == 0) { break; }
+            ret += flow;
+        }
+        return ret;
+    }
+};
+
 
 
 // Bipartite Matching O(VE)
@@ -290,3 +311,5 @@ void circulation() {
 		}
 	}
 }
+
+
