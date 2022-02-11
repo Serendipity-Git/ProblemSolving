@@ -1,7 +1,7 @@
-// UnionFind
+// UnionFind (0-based)
 struct DSU {
     int N;
-    vector<ll> parent, member;
+    vector<int> parent, member;
     DSU() { N = 0; }
     DSU(int n) {
         N = n;
@@ -24,20 +24,21 @@ struct DSU {
 };
 
 
-// Penwick Tree
+// Fenwick Tree (1-based)
 // 구간의 합을 구할수 있다
-struct penwick {
+struct fenwick {
     ll N;
     vector<ll> a, s, tree;
     // 사이즈 n짜리의 penwick tree를 만들어준다.
     // 1-base index 사용했다
-    penwick(ll n) {
+    fenwick() { N = 0; }
+    fenwick(ll n) {
         N = n;
         a.resize(n + 1);
         s.resize(n + 1);
         tree.resize(n + 1);
     }
-    ll sum(ll n) {
+    ll query(ll n) {
         ll ret = 0;
         while (n >= 1) {
             ret += tree[n];
@@ -54,13 +55,14 @@ struct penwick {
             n += (n & -n);
         }
     }
-    // sum(l,r) : l부터 r까지의 합을 구해준다
-    ll sum(ll l, ll r) {
-        return sum(r) - sum(l - 1);
+    // query (l,r) : l부터 r까지의 합을 구해준다
+    ll query(ll l, ll r) {
+        if (l > r) { return 0; }
+        return query(r) - query(l - 1);
     }
 };
 
-// Segment Tree
+// Segment Tree (1-based)
 // 구간 [L,R]에 관련된 쿼리를 반복적으로 처리해야 할 때 생각한다.
 
 struct sumseg {
@@ -68,30 +70,32 @@ struct sumseg {
     vector<ll> a, seg;
     sumseg() { N = 0; }
     sumseg(int n) {
-        N = n;
+        N = n; 
+        int M=1;
+        while(M<N){M<<=1;}
         a.resize(n + 1);
-        seg.resize(4 * n + 4);
+        seg.resize(M<<1);
     }
 
     void maketree(int left, int right, int node) {
         if (left == right) { seg[node] = a[left]; return; }
-        int mid = (left + right) / 2;
-        maketree(left, mid, node * 2);
-        maketree(mid + 1, right, node * 2 + 1);
-        seg[node] = seg[node * 2] + seg[node * 2 + 1];
+        int mid = (left + right)>>1;
+        maketree(left, mid, node<<1);
+        maketree(mid + 1, right, (node<<1) + 1);
+        seg[node] = seg[node<<1] + seg[(node<<1) + 1];
     }
     void update(int left, int right, int which, ll val, int node) {
         if (left == right) { a[which] = val; seg[node] = a[left]; return; }
-        int mid = (left + right) / 2;
-        if (which <= mid) { update(left, mid, which, val, node * 2); }
-        else { update(mid + 1, right, which, val, node * 2 + 1); }
-        seg[node] = seg[node * 2] + seg[node * 2 + 1];
+        int mid = (left + right)>>1;
+        if (which <= mid) { update(left, mid, which, val, node<<1); }
+        else { update(mid + 1, right, which, val, (node<<1) + 1); }
+        seg[node] = seg[(node<<1)] + seg[(node<<1) + 1];
     }
     ll query(int left, int right, int from, int to, int node) {
         if (right<from || left>to) { return 0; }
         if (from <= left && right <= to) { return seg[node]; }
-        int mid = (left + right) / 2;
-        ll ret = query(left, mid, from, to, node * 2) + query(mid + 1, right, from, to, node * 2 + 1);
+        int mid = (left + right)>>1;
+        ll ret = query(left, mid, from, to, (node<<1)) + query(mid + 1, right, from, to, (node<<1) + 1);
         return ret;
     }
     void maketree() { maketree(1, N, 1); }
@@ -104,29 +108,31 @@ struct gcdseg {
     vector<ll> a, seg;
     gcdseg() { N = 0; }
     gcdseg(ll n) {
-        N = n;
+        N = n; 
+        int M=1;
+        while(M<N){M<<=1;}
         a.resize(n + 1);
-        seg.resize(4 * n + 4);
+        seg.resize(M<<1);
     }
 
     void maketree(int left, int right, int node) {
         if (left == right) { seg[node] = a[left]; return; }
-        int mid = (left + right) / 2;
-        maketree(left, mid, node * 2);
-        maketree(mid + 1, right, node * 2 + 1);
-        seg[node] = gcd(seg[node * 2], seg[node * 2 + 1]);
+        int mid = (left + right)>>1;
+        maketree(left, mid,(node<<1));
+        maketree(mid + 1, right, (node<<1) + 1);
+        seg[node] = gcd(seg[(node<<1)], seg[(node<<1) + 1]);
     }
     void update(int left, int right, int which, ll val, int node) {
         if (left == right) { a[which] = val; seg[node] = a[left]; return; }
-        int mid = (left + right) / 2;
-        if (which <= mid) { update(left, mid, which, val, node * 2); }
-        else { update(mid + 1, right, which, val, node * 2 + 1); }
-        seg[node] = gcd(seg[node * 2], seg[node * 2 + 1]);
+        int mid = (left + right)>>1;
+        if (which <= mid) { update(left, mid, which, val, (node<<1)); }
+        else { update(mid + 1, right, which, val, (node<<1) + 1); }
+        seg[node] = gcd(seg[(node<<1)], seg[(node<<1) + 1]);
     }
     ll query(int left, int right, int from, int to, int node) {
         if (right<from || left>to) { return 0; }
         if (from <= left && right <= to) { return seg[node]; }
-        int mid = (left + right) / 2;
+        int mid = (left + right)>>1;
         ll ret = gcd(query(left, mid, from, to, node * 2), query(mid + 1, right, from, to, node * 2 + 1));
         return ret;
     }
@@ -140,9 +146,11 @@ struct maxseg {
     vector<ll> a, seg;
     maxseg() { N = 0; }
     maxseg(int n) {
-        N = n;
+        N = n; 
+        int M=1;
+        while(M<N){M<<=1;}
         a.resize(n + 1);
-        seg.resize(4 * n + 4);
+        seg.resize(M<<1);
     }
 
     void maketree(int left, int right, int node) {
@@ -176,9 +184,11 @@ struct minseg {
     vector<ll> a, seg;
     minseg() { N = 0; }
     minseg(int n) {
-        N = n;
+        N = n; 
+        int M=1;
+        while(M<N){M<<=1;}
         a.resize(n + 1);
-        seg.resize(4 * n + 4);
+        seg.resize(M<<1);
     }
 
     void maketree(int left, int right, int node) {
@@ -208,8 +218,11 @@ struct minseg {
 };
 
 
+
+
 // Lazy Propagation - 세그트리 update를 할때 원소 하나만 update하는게 아니라 [L,R] 범위를 모두 update할때 쓴다
 // 구간 update : O(logN)에 [L,R]을 update 할수있다.
+// (1-based)
 
 
 struct lazy_sumseg {
@@ -217,10 +230,12 @@ struct lazy_sumseg {
     vector<ll> a, seg, lazy;
     lazy_sumseg() { N = 0; }
     lazy_sumseg(int n) {
-        N = n;
+        N = n; 
+        int M=1;
+        while(M<N){M<<=1;}
         a.resize(n + 1);
-        seg.resize(4 * n + 4);
-        lazy.resize(4 * n + 4);
+        seg.resize(M<<1);
+        lazy.resize(M<<1);
     }
 
     void maketree(int l, int r, int node) {
@@ -231,15 +246,15 @@ struct lazy_sumseg {
         seg[node] = seg[node * 2] + seg[node * 2 + 1];
     }
     void propagate(int l, int r, int node) {
-        if (l == r) { seg[node] += lazy[node]; lazy[node] = 0; return; }
-        seg[node] += lazy[node] * (r - l + 1);
-        lazy[node * 2] += lazy[node];
-        lazy[node * 2 + 1] += lazy[node];
+        if (l == r) { seg[node] = seg[node] + lazy[node]; lazy[node] = 0; return; }
+        seg[node] = seg[node] + lazy[node] * (r - l + 1);
+        lazy[node * 2] = lazy[node*2] + lazy[node];
+        lazy[node * 2 + 1] = lazy[node*2+1] + lazy[node];
         lazy[node] = 0;
     }
     void update(int l, int r, int from, int to, ll inc, int node) {
         propagate(l, r, node);
-        if (from <= l && r <= to) { lazy[node] += inc; propagate(l, r, node); return; }
+        if (from <= l && r <= to) { lazy[node] = lazy[node] + inc; propagate(l, r, node); return; }
         if (from > r || to < l) { return; }
         int mid = (l + r) >> 1;
         update(l, mid, from, to, inc, node * 2);
@@ -261,12 +276,14 @@ struct lazy_sumseg {
 struct lazy_maxseg {
     int N;
     vector<ll> a, seg, lazy;
-    lazy_minseg() { N = 0; }
-    lazy_minseg(int n) {
-        N = n;
+    lazy_maxseg() { N = 0; }
+    lazy_maxseg(int n) {
+        N = n; 
+        int M=1;
+        while(M<N){M<<=1;}
         a.resize(n + 1);
-        seg.resize(4 * n + 4);
-        lazy.resize(4 * n + 4);
+        seg.resize(M<<1);
+        lazy.resize(M<<1);
     }
 
     void maketree(int l, int r, int node) {
@@ -277,15 +294,15 @@ struct lazy_maxseg {
         seg[node] = max(seg[node * 2], seg[node * 2 + 1]);
     }
     void propagate(int l, int r, int node) {
-        if (l == r) { seg[node] += lazy[node]; lazy[node] = 0; return; }
-        seg[node] += lazy[node];
-        lazy[node * 2] += lazy[node];
-        lazy[node * 2 + 1] += lazy[node];
+        if (l == r) { seg[node] = seg[node] + lazy[node]; lazy[node] = 0; return; }
+        seg[node] = seg[node] + lazy[node];
+        lazy[node * 2] = lazy[node*2] + lazy[node];
+        lazy[node * 2 + 1] = lazy[node*2+1] + lazy[node];
         lazy[node] = 0;
     }
     void update(int l, int r, int from, int to, ll inc, int node) {
         propagate(l, r, node);
-        if (from <= l && r <= to) { lazy[node] += inc; propagate(l, r, node); return; }
+        if (from <= l && r <= to) { lazy[node] =lazy[node] + inc; propagate(l, r, node); return; }
         if (from > r || to < l) { return; }
         int mid = (l + r) >> 1;
         update(l, mid, from, to, inc, node * 2);
@@ -309,10 +326,12 @@ struct lazy_minseg {
     vector<ll> a, seg, lazy;
     lazy_minseg() { N = 0; }
     lazy_minseg(int n) {
-        N = n;
+        N = n; 
+        int M=1;
+        while(M<N){M<<=1;}
         a.resize(n + 1);
-        seg.resize(4 * n + 4);
-        lazy.resize(4 * n + 4);
+        seg.resize(M<<1);
+        lazy.resize(M<<1);
     }
 
     void maketree(int l, int r, int node) {
@@ -323,15 +342,15 @@ struct lazy_minseg {
         seg[node] = min(seg[node * 2], seg[node * 2 + 1]);
     }
     void propagate(int l, int r, int node) {
-        if (l == r) { seg[node] += lazy[node]; lazy[node] = 0; return; }
-        seg[node] += lazy[node];
-        lazy[node * 2] += lazy[node];
-        lazy[node * 2 + 1] += lazy[node];
+        if (l == r) { seg[node] = seg[node] + lazy[node]; lazy[node] = 0; return; }
+        seg[node] = seg[node] + lazy[node];
+        lazy[node * 2] = lazy[node*2] + lazy[node];
+        lazy[node * 2 + 1] = lazy[node*2+1] + lazy[node];
         lazy[node] = 0;
     }
     void update(int l, int r, int from, int to, ll inc, int node) {
         propagate(l, r, node);
-        if (from <= l && r <= to) { lazy[node] += inc; propagate(l, r, node); return; }
+        if (from <= l && r <= to) { lazy[node] = lazy[node] + inc; propagate(l, r, node); return; }
         if (from > r || to < l) { return; }
         int mid = (l + r) >> 1;
         update(l, mid, from, to, inc, node * 2);
@@ -350,11 +369,57 @@ struct lazy_minseg {
     ll query(int from, int to) { return query(1, N, from, to, 1); }
 };
 
+struct lazy_xorseg {
+    int N;
+    vector<ll> a, seg, lazy;
+    lazy_xorseg() { N = 0; }
+    lazy_xorseg(int n) {
+        N = n; 
+        int M=1;
+        while(M<N){M<<=1;}
+        a.resize(n + 1);
+        seg.resize(M<<1);
+        lazy.resize(M<<1);
+    }
+
+    void maketree(int l, int r, int node) {
+        if (l == r) { seg[node] = a[l]; return; }
+        int mid = (l + r) >> 1;
+        maketree(l, mid, node * 2);
+        maketree(mid + 1, r, node * 2 + 1);
+        seg[node] = seg[node * 2] ^ seg[node * 2 + 1];
+    }
+    void propagate(int l, int r, int node) {
+        if (l == r) { seg[node] = seg[node] ^ lazy[node]; lazy[node] = 0; return; }
+        if ((r - l + 1) % 2) { seg[node] = seg[node] ^ lazy[node]; }
+        lazy[node * 2] = lazy[node*2] ^ lazy[node];
+        lazy[node * 2 + 1] = lazy[node*2+1] ^ lazy[node];
+        lazy[node] = 0;
+    }
+    void update(int l, int r, int from, int to, ll inc, int node) {
+        propagate(l, r, node);
+        if (from <= l && r <= to) { lazy[node] = lazy[node] ^ inc; propagate(l, r, node); return; }
+        if (from > r || to < l) { return; }
+        int mid = (l + r) >> 1;
+        update(l, mid, from, to, inc, node * 2);
+        update(mid + 1, r, from, to, inc, node * 2 + 1);
+        seg[node] = seg[node * 2] ^ seg[node * 2 + 1];
+    }
+    ll query(int l, int r, int from, int to, int node) {
+        propagate(l, r, node);
+        if (from <= l && r <= to) { return seg[node]; }
+        if (from > r || to < l) { return 0; }
+        int mid = (l + r) >> 1;
+        return query(l, mid, from, to, node * 2) ^ query(mid + 1, r, from, to, node * 2 + 1);
+    }
+    void maketree() { maketree(1, N, 1); }
+    void update(int from, int to, ll inc) { update(1, N, from, to, inc, 1); }
+    ll query(int from, int to) { return query(1, N, from, to, 1); }
+};
 
 
 
-
-// Sparse Table
+// Sparse Table (0-based)
 범위 [L,R]이 주어졌을 때 Function(L,L+1,...,R)을 빠르게 한다
 조건1) Array에 저장된 값이 변하면 안된다.
 조건2) Function은 결합법칙이 성립해야 한다.
@@ -388,8 +453,8 @@ struct minsps {
     ll query(ll l, ll r) {
         ll D = r - l + 1;
         ll cnt = 0;
-        while (D != 1) {
-            ++cnt; D >>= 1;
+        while ((1LL << cnt) * 2 < D) {
+            ++cnt;
         }
         return min(v[cnt][l], v[cnt][r + 1 - (1LL << cnt)]);
     }
@@ -422,8 +487,8 @@ struct maxsps {
     ll query(ll l, ll r) {
         ll D = r - l + 1;
         ll cnt = 0;
-        while (D != 1) {
-            ++cnt; D >>= 1;
+        while ((1LL << cnt) * 2 < D) {
+            ++cnt;
         }
         return max(v[cnt][l], v[cnt][r + 1 - (1LL << cnt)]);
     }
