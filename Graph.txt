@@ -92,5 +92,4 @@ struct SCC{
         }
         return ret;
     }   
-
 };
