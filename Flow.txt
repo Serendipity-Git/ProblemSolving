@@ -37,8 +37,8 @@ struct maxflow{
         for (int i=0;i<N;i++){level[i]=-1;}
         level[s] = 0; que.push(s);
         while (!que.empty()) {
-            ll cur = que.front(); que.pop();
-            for (auto it : adj[cur]) {
+            int cur = que.front(); que.pop();
+            for (auto& it : adj[cur]) {
                 if (it->spare() > 0 && level[it->to] == -1) {
                     que.push(it->to); level[it->to] = level[cur] + 1;
                 }
