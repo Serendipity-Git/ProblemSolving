@@ -19,7 +19,7 @@ const ll MOD = 998244353; // depending on the problem
 
 
 void solve() {
-    
+
 
 
 
