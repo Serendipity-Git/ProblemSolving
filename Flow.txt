@@ -138,9 +138,187 @@ struct bimatch{
 };
 
 
+// MaxFlow - MinCost O(V*E*F)~O(E*F)
+// 0-based이다
+// 단방향이다
+// edge의 cost까지도 추가해줘야 한다
+
+struct Edge {
+	int to;
+	ll cap, flow, cost;
+	Edge* reverse;
+	Edge(int _to, ll _cap, ll _cost) :to(_to), cap(_cap), cost(_cost), flow(0) {}
+	ll spare() { return cap - flow; }
+	void add(ll f) {
+		this->flow += f;
+		reverse->flow -= f;
+	}
+};
+struct MCMF{
+	int N,M,s,t;
+	vector<vector<Edge*>> adj;
+
+	MCMF(){N=s=t=0;}
+	MCMF(int _n, int _s, int _t){
+		N=_n; s=_s; t=_t;
+		adj.resize(N);
+	}
+
+	void addEdge(int from, int to, ll cap, ll cost) {
+		Edge* e1 = new Edge(to, cap, cost);
+		Edge* e2 = new Edge(from, 0, -cost);
+		e1->reverse = e2; e2->reverse = e1;
+		adj[from].push_back(e1);
+		adj[to].push_back(e2);
+	}
+
+	pair<ll, ll> query() {
+		pii ret;
+		ll cans = 0, fans = 0;
+		while (true) {
+			vector<ll> dis(N,LLINF);
+			vector<int> prev(N,-1);
+			vector<bool> inque(N);
+			vector<Edge*> path(N);
+			queue<int> que;
+
+			que.push(s); inque[s] = true; dis[s] = 0;
+			while (!que.empty()) {
+				int cur = que.front(); que.pop(); inque[cur] = false;
+				for (auto it : adj[cur]) {
+					if (it->spare() > 0 && dis[it->to] > dis[cur] + it->cost) {
+						if (!inque[it->to]) { que.push(it->to); inque[it->to] = true; }
+						dis[it->to] = dis[cur] + it->cost;
+						prev[it->to] = cur;
+						path[it->to] = it;
+					}
+				}
+			}
+			if (prev[t] == -1) { break; }
+			ll flow = INF;
+			for (ll i = t; i != s; i = prev[i]) {
+				flow = min(flow, path[i]->spare());
+			}
+			fans += flow;
+			for (ll i = t; i != s; i = prev[i]) {
+				cans += path[i]->cost;
+				path[i]->add(fans);
+			}
+		}
+		ret.first = fans;
+		ret.second = cans;
+		return ret;
+	}
+};
+
+
+// Circulation by Dinic O(V^2*E)
+// LR-edge는 addLREdge로 추가한다
+// LR-edge만 추가하면 query에서 자동으로 나머지 edge를 만들어준다.
+// query함수는 존재하지 않을 경우에는 ans[0]=-1이 담긴 벡터를 리턴한다
+
+struct Edge{
+    int to;
+    ll c,f;
+    Edge* reverse;
+    Edge(int _to, ll _c) : to(_to), c(_c), f(0) {}
+    ll spare() { return c - f; }
+    void add(ll inc) {
+        f+=inc;
+        reverse->f -= inc;
+    }
+};
+struct circulation{
+    int N,M,s,t;
+    vector<vector<Edge*>> adj;
+	vector<Edge*> E;
+	vector<ll> D,LB;
+    vector<int> level,see;
+    queue<int> que;
+
+    circulation(){N=M=s=t=0;}
+    circulation(int n, int m, int _s, int _t){
+        N=n; M=m; s=_s;t=_t;
+		D.resize(N);
+		LB.resize(M);
+		E.resize(M);
+        adj.resize(N);
+        level.resize(N);
+        see.resize(N);
+    }
+    void addEdge(int u, int v, ll c) {
+        Edge* e1 = new Edge(v, c);
+        Edge* e2 = new Edge(u, 0);
+        e1->reverse = e2; e2->reverse = e1;
+        adj[u].push_back(e1);
+        adj[v].push_back(e2);
+    }
+    void addLREdge(int u, int v, ll l, ll r, int idx) {
+		D[u]+=l; D[v]-=l;
+        Edge* e1 = new Edge(v, r-l);
+        Edge* e2 = new Edge(u, 0);
+		LB[idx] = l;
+		E[idx] = e1;
+        e1->reverse = e2; e2->reverse = e1;
+        adj[u].push_back(e1);
+        adj[v].push_back(e2);
+    }
+    bool bfs() {
+        for (int i=0;i<N;i++){level[i]=-1;}
+        level[s] = 0; que.push(s);
+        while (!que.empty()) {
+            int cur = que.front(); que.pop();
+            for (auto& it : adj[cur]) {
+                if (it->spare() > 0 && level[it->to] == -1) {
+                    que.push(it->to); level[it->to] = level[cur] + 1;
+                }
+            }
+        }
+        if (level[t] == -1) { return false; }
+        return true;
+    }
+    ll dfs(int n, ll flow) {
+        if (n == t) { return flow; }
+        for (int& i = see[n]; i < (int)adj[n].size(); i++) {
+            int next = adj[n][i]->to;
+            if (adj[n][i]->spare() > 0 && level[next] == level[n] + 1) {
+                int f = dfs(next, min(flow, adj[n][i]->spare()));
+                if (f > 0) { adj[n][i]->add(f); return f; }
+            }
+        }
+        return 0;
+    }
+    vector<ll> query() {
+		vector<ll> ans(M);
+
+		ll in,out; in=out=0;
+		for (int i=0;i<N;i++){
+			if (i==s || i==t){continue;}
+			if (D[i]<0){out-=D[i]; addEdge(s,i,-D[i]);}
+			else{in+=D[i]; addEdge(i,t,D[i]);}
+		}
+		
+        ll ret = 0;
+        while (bfs()) {
+            for (int i=0;i<N;i++){see[i]=0;}
+            while (true) {
+                ll f = dfs(s, INF);
+                if (f == 0) { break; }
+                ret += f;
+            }
+        }
+		if (in!=out || in!=ret){ ans.resize(1); ans[0]=-1; return ans;}
+		for (int i=0;i<M;i++){
+			ans[i] = LB[i]+E[i]->f;
+		}
+        return ans;
+    }
+};
+
+
+
 
 // Bipartite Matching O(VE)
-
 ll N, M;
 ll L[MAX];
 ll R[MAX];
@@ -173,143 +351,3 @@ ll bipartite() {
 	}
 	return ret;
 }
-
-
-// MaxFlow - MinCost O(V*E*F)~O(E*F)
-
-struct Edge {
-	ll to, cap, flow, cost;
-	Edge* reverse;
-	Edge(ll _to, ll _cap, ll _cost) :to(_to), cap(_cap), cost(_cost), flow(0) {}
-	ll spare() { return cap - flow; }
-	void add(ll f) {
-		this->flow += f;
-		reverse->flow -= f;
-	}
-};
-
-ll N, M, s, t;
-vector<Edge*> adj[MAX];
-
-void addEdge(ll from, ll to, ll cap, ll cost) {
-	Edge* e1 = new Edge(to, cap, cost);
-	Edge* e2 = new Edge(from, 0, -cost);
-	e1->reverse = e2; e2->reverse = e1;
-	adj[from].push_back(e1);
-	adj[to].push_back(e2);
-}
-pair<ll, ll> MCMF() {
-	pi ret;
-	ll cans = 0, fans = 0;
-	while (true) {
-		ll dis[MAX]; fill(dis, dis + MAX, INF);
-		ll prev[MAX]; memset(prev, -1, sizeof(prev));
-		bool inQ[MAX]; memset(inQ, false, sizeof(inQ));
-		Edge* path[MAX];
-		queue<ll> myqueue;
-
-		myqueue.push(s); inQ[s] = true; dis[s] = 0;
-		while (!myqueue.empty()) {
-			ll cur = myqueue.front(); myqueue.pop(); inQ[cur] = false;
-			for (auto it : adj[cur]) {
-				if (it->spare() > 0 && dis[it->to] > dis[cur] + it->cost) {
-					if (!inQ[it->to]) { myqueue.push(it->to); inQ[it->to] = true; }
-					dis[it->to] = dis[cur] + it->cost;
-					prev[it->to] = cur;
-					path[it->to] = it;
-				}
-			}
-		}
-		if (prev[t] == -1) { break; }
-		ll flow = INF;
-		for (ll i = t; i != s; i = prev[i]) {
-			flow = min(flow, path[i]->spare());
-		}
-		fans += flow;
-		for (ll i = t; i != s; i = prev[i]) {
-			cans += path[i]->cost;
-			path[i]->add(fans);
-		}
-	}
-	ret.first = fans;
-	ret.second = cans;
-	return ret;
-}
-
-
-// Circulation by Dinic O(V^2*E)
-
-void addEdge(ll from, ll to, ll cap) {
-	Edge* e1 = new Edge(to, cap);
-	Edge* e2 = new Edge(from, 0);
-	e1->reverse = e2; e2->reverse = e1;
-	adj[from].push_back(e1);
-	adj[to].push_back(e2);
-}
-void addLREdge(ll index) {
-	ll from, to, l, r; cin >> from >> to >> l >> r;
-	demand[from] -= l; demand[to] += l;
-	Edge* e1 = new Edge(to, r - l);
-	Edge* e2 = new Edge(from, 0);
-	e1->reverse = e2; e2->reverse = e1;
-	adj[from].push_back(e1);
-	adj[to].push_back(e2);
-	elist[index] = e1;
-	L[index] = l;
-}
-bool bfs() {
-	memset(level, -1, sizeof(level));
-	level[s] = 0; myqueue.push(s);
-	while (!myqueue.empty()) {
-		ll cur = myqueue.front(); myqueue.pop();
-		for (auto it : adj[cur]) {
-			if (it->spare() > 0 && level[it->to] == -1) {
-				myqueue.push(it->to); level[it->to] = level[cur] + 1;
-			}
-		}
-	}
-	if (level[t] == -1) { return false; }
-	return true;
-}
-ll dfs(ll n, ll flow) {
-	if (n == t) { return flow; }
-	for (ll& i = see[n]; i < (ll)adj[n].size(); i++) {
-		ll next = adj[n][i]->to;
-		if (adj[n][i]->spare() > 0 && level[next] == level[n] + 1) {
-			ll f = dfs(next, min(flow, adj[n][i]->spare()));
-			if (f > 0) { adj[n][i]->add(f); return f; }
-		}
-	}
-	return 0;
-}
-ll dinic() {
-	ll ret = 0;
-	while (bfs()) {
-		memset(see, 0, sizeof(see));
-		while (true) {
-			ll f = dfs(s, INF);
-			if (f == 0) { break; }
-			ret += f;
-		}
-	}
-	return ret;
-}
-void circulation() {
-	ll S = 0, T = 0;
-	for (int i = 1; i <= N; i++) {
-		if (demand[i] > 0) { addEdge(0, i, demand[i]); S += demand[i]; }
-		if (demand[i] < 0) { addEdge(i, t, -demand[i]); T -= demand[i]; }
-	}
-	if (S != T) { cout << -1; return; }
-
-	ll flow = dinic();
-	if (flow != S) { cout << -1; return; }
-	else {
-		cout << 1 << "\n";
-		for (int i = 0; i < M; i++) {
-			cout << elist[i]->flow + L[i] << "\n";
-		}
-	}
-}
-
-
