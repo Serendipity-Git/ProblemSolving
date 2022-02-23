@@ -28,7 +28,9 @@ vector<ll> primegen(ll N) {
             if (j % ret[i] == 0) break;
         }
     }
+    return ret;
 }
+
 
 // Mobius Function Linear Sieve O(n)
 vector<ll> prime;
