@@ -1,45 +1,79 @@
 
 // Fast Fourier Transform && convolution
+// N-1차식이면 변수가 N개므로 FFT(N)으로 선언한다.
+// A에는 다항식 A를 저장한다.
+// query(B)에는 A와 B의 곱을 A에 저장한다.
 
-int bitReverse(int n, int k) {
-    int r, i;
-    for (r = 0, i = 0; i < k; ++i) { r |= ((n >> i) & 1) << (k - i - 1); }
-    return r;
-}
-void fft(vector<inum>& a, bool reverse) {
-    const int n = (int)a.size();
-    int t = n, k = 0; while (t > 1) { t >>= 1; ++k; }
+struct FFT{
+    int N;
+    vector<ll> A;
 
-    for (int i = 0; i < n; i++) {
-        int j = bitReverse(i, k);
-        if (i < j) { swap(a[i], a[j]); }
+    FFT(){N=0;}
+    FFT(int n){N=n; A.resize(N);}
+
+    int bitReverse(int n, int k) {
+        int r, i;
+        for (r = 0, i = 0; i < k; ++i) { r |= ((n >> i) & 1) << (k - i - 1); }
+        return r;
     }
+    void fft(vector<inum>& a, bool reverse) {
+        const int n = (int)a.size();
+        int k = __builtin_ctz(n);
 
-    for (int s = 2; s <= n; s *= 2) {
-        double t = 2 * PI / s * (reverse ? -1 : 1);
-        inum ws(cos(t), sin(t));
-        for (int j = 0; j < n; j += s) {
-            inum w(1, 0);
-            for (int i = 0; i < s / 2; i++) {
-                inum temp = a[j + i + s / 2] * w;
-                a[j + i + s / 2] = a[j + i] - temp;
-                a[j + i] += temp;
-                w *= ws;
+        for (int i = 0; i < n; i++) {
+            int j = bitReverse(i, k);
+            if (i < j) { swap(a[i], a[j]); }
+        }
+
+        for (int s = 2; s <= n; s <<= 1) {
+            double t = 2 * PI / s * (reverse ? -1 : 1);
+            inum ws(cos(t), sin(t));
+            for (int j = 0; j < n; j += s) {
+                inum w(1, 0);
+                for (int i = 0; i < s / 2; i++) {
+                    inum temp = a[j + i + s / 2] * w;
+                    a[j + i + s / 2] = a[j + i] - temp;
+                    a[j + i] += temp;
+                    w *= ws;
+                }
             }
         }
+        if (reverse) { for (int i = 0; i < n; i++) { a[i] /= n; } }
     }
-    if (reverse) { for (int i = 0; i < n; i++) { a[i] /= n; } }
-}
-void convolution(vector<inum>& a, vector<inum>& b) {
-    int al = (int)a.size(); int bl = (int)b.size();
-    int np = 1; while (np < al + bl) { np <<= 1; }
+    void convolution(vector<inum>& a, vector<inum>& b) {
+        int ns = a.size()+b.size()-1;
+        int np=1; while(np<ns){np<<=1;}
+        a.resize(np);
+        b.resize(np);
 
-    a.resize(np); b.resize(np);
-    fft(a, false);
-    fft(b, false);
-    for (int i = 0; i < np; i++) { a[i] *= b[i]; }
-    fft(a, true);
-}
+        fft(a,0);
+        fft(b,0);
+
+        for (int i = 0; i < np; i++){
+            a[i]*=b[i];
+        }
+        fft(a, true);
+        a.resize(ns);
+    }
+    void query(vector<ll>& B){
+        vector<inum> a,b;
+        int m = B.size();
+        a.resize(N);
+        b.resize(m);
+        for (int i=0;i<N;i++){
+            a[i].real(A[i]);
+        }
+        for (int i=0;i<m;i++){
+            b[i].real(B[i]);
+        }
+        convolution(a,b);
+        N = a.size();
+        A.resize(N);
+        for (int i=0;i<N;i++){
+            A[i] = (ll)(a[i].real()+0.5);
+        }
+    }
+};
 
 // Convex hull trick
 DP[i] = max(M[j]*X[i] + N[j]) + C[i] (j<i)
