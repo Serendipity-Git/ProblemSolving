@@ -18,7 +18,7 @@ void PrimeGenerator(ll N) {
 }
 
 // Linear Sieve O(n)
-vector<ll> PrimeGenerator(ll N) {
+vector<ll> primegen(ll N) {
     vector<bool> isprime(N+1,1);
     vector<ll> ret;
     for (ll j = 2; j <= N; j++) {
