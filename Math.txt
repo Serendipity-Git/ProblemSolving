@@ -18,15 +18,14 @@ void PrimeGenerator(ll N) {
 }
 
 // Linear Sieve O(n)
-vector<ll> prime;
-void PrimeGenerator(ll N) {
-    bool isprime[MAX + 1];
-    memset(isprime, true, sizeof(isprime));
+vector<ll> PrimeGenerator(ll N) {
+    vector<bool> isprime(N+1,1);
+    vector<ll> ret;
     for (ll j = 2; j <= N; j++) {
-        if (isprime[j]) { prime.push_back(j); }
-        for (ll i = 0; i < prime.size() && j * prime[i] <= N; ++i) {
-            isprime[j * prime[i]] = false;
-            if (j % prime[i] == 0) break;
+        if (isprime[j]) { ret.push_back(j); }
+        for (ll i = 0; i < ret.size() && j * ret[i] <= N; ++i) {
+            isprime[j * ret[i]] = false;
+            if (j % ret[i] == 0) break;
         }
     }
 }
