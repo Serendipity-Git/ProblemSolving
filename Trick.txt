@@ -1,79 +1,51 @@
 
 // Fast Fourier Transform && convolution
-// N-1차식이면 변수가 N개므로 FFT(N)으로 선언한다.
-// A에는 다항식 A를 저장한다.
-// query(B)에는 A와 B의 곱을 A에 저장한다.
+// query(A,B)는 다항식 A와 B의 곱을 벡터로 리턴한다.
 
 struct FFT{
-    int N;
-    vector<ll> A;
+    // 출처: https://blog.myungwoo.kr/54 [PS 이야기]
+	FFT(){;}
 
-    FFT(){N=0;}
-    FFT(int n){N=n; A.resize(N);}
-
-    int bitReverse(int n, int k) {
-        int r, i;
-        for (r = 0, i = 0; i < k; ++i) { r |= ((n >> i) & 1) << (k - i - 1); }
-        return r;
-    }
-    void fft(vector<inum>& a, bool reverse) {
-        const int n = (int)a.size();
-        int k = __builtin_ctz(n);
-
-        for (int i = 0; i < n; i++) {
-            int j = bitReverse(i, k);
-            if (i < j) { swap(a[i], a[j]); }
+    void fft(vector<inum>& a) {
+        int n = a.size(), L = 31 - __builtin_clz(n);
+        static vector<complex<ld>> R(2, 1);
+        static vector<inum> rt(2, 1);
+        for (static int k = 2; k < n; k *= 2) {
+            R.resize(n); rt.resize(n);
+            auto x = polar(1.0L, acos(-1.0L) / k);
+            for (int i=k;i<k+k;i++) rt[i] = R[i] = i&1 ? R[i/2] * x : R[i/2];
         }
-
-        for (int s = 2; s <= n; s <<= 1) {
-            double t = 2 * PI / s * (reverse ? -1 : 1);
-            inum ws(cos(t), sin(t));
-            for (int j = 0; j < n; j += s) {
-                inum w(1, 0);
-                for (int i = 0; i < s / 2; i++) {
-                    inum temp = a[j + i + s / 2] * w;
-                    a[j + i + s / 2] = a[j + i] - temp;
-                    a[j + i] += temp;
-                    w *= ws;
-                }
+        vector<int> rev(n);
+        for (int i=0;i<n;i++) rev[i] = (rev[i / 2] | (i & 1) << L) / 2;
+        for (int i=0;i<n;i++) if (i < rev[i]) swap(a[i], a[rev[i]]);
+        for (int k = 1; k < n; k *= 2){
+            for (int i = 0; i < n; i += 2 * k) for (int j=0;j<k;j++) {
+                auto x = (double *)&rt[j+k], y = (double *)&a[i+j+k];                
+                inum z(x[0]*y[0] - x[1]*y[1], x[0]*y[1] + x[1]*y[0]);     
+                a[i + j + k] = a[i + j] - z;
+                a[i + j] += z;
             }
         }
-        if (reverse) { for (int i = 0; i < n; i++) { a[i] /= n; } }
     }
-    void convolution(vector<inum>& a, vector<inum>& b) {
-        int ns = a.size()+b.size()-1;
-        int np=1; while(np<ns){np<<=1;}
-        a.resize(np);
-        b.resize(np);
-
-        fft(a,0);
-        fft(b,0);
-
-        for (int i = 0; i < np; i++){
-            a[i]*=b[i];
+ 
+    vector<ll> query(const vector<ll>& a, const vector<ll>& b) {
+        if (a.empty() || b.empty()) return {};
+        vector<ll> ret(a.size()+b.size() - 1);
+        int L = 32 - __builtin_clz(ret.size()), n = 1 << L;
+        vector<inum> in(n), out(n);
+        copy(a.begin(),a.end(), begin(in));
+        for (int i=0;i<b.size();i++) in[i].imag(b[i]);
+        fft(in);
+        for (inum& x: in) x *= x;
+        for (int i=0;i<n;i++) out[i] = in[-i & (n - 1)] - conj(in[i]);
+        fft(out);
+        for (int i=0;i<ret.size();i++){
+            ret[i] = static_cast<ll>(imag(out[i]) / (4 * n) + (is_integral_v<ll> ? (imag(out[i]) > 0 ? 0.5 : -0.5) : 0));
         }
-        fft(a, true);
-        a.resize(ns);
-    }
-    void query(vector<ll>& B){
-        vector<inum> a,b;
-        int m = B.size();
-        a.resize(N);
-        b.resize(m);
-        for (int i=0;i<N;i++){
-            a[i].real(A[i]);
-        }
-        for (int i=0;i<m;i++){
-            b[i].real(B[i]);
-        }
-        convolution(a,b);
-        N = a.size();
-        A.resize(N);
-        for (int i=0;i<N;i++){
-            A[i] = (ll)(a[i].real()+0.5);
-        }
+        return ret;
     }
 };
+
 
 // Convex hull trick
 DP[i] = max(M[j]*X[i] + N[j]) + C[i] (j<i)
