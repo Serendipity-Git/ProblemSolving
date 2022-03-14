@@ -2,20 +2,16 @@
 // 0-based이다
 // 단방향 그래프이다
 
-struct Edge{
-    int to;
-    ll c,f;
-    Edge* reverse;
-    Edge(int _to, ll _c) : to(_to), c(_c), f(0) {}
-    ll spare() { return c - f; }
-    void add(ll inc) {
-        f+=inc;
-        reverse->f -= inc;
-    }
-};
 struct maxflow{
+    struct Edge{
+        int to,rev;
+        ll c,f;
+        Edge(int _to, ll _c) : to(_to), c(_c), f(0) {}
+        ll spare() { return c - f; }
+    };
+    
     int N,s,t;
-    vector<vector<Edge*>> adj;
+    vector<vector<Edge>> adj;
     vector<int> level,see;
     queue<int> que;
 
@@ -26,12 +22,26 @@ struct maxflow{
         level.resize(N);
         see.resize(N);
     }
-    void addEdge(int u, int v, ll c) {
-        Edge* e1 = new Edge(v, c);
-        Edge* e2 = new Edge(u, 0);
-        e1->reverse = e2; e2->reverse = e1;
-        adj[u].push_back(e1);
-        adj[v].push_back(e2);
+    void add(Edge& e, ll inc) {
+        e.f+=inc;
+        adj[e.to][e.rev].f-=inc;
+    }
+    void addEdge(int u, int v, ll c, bool undirected = 0) {
+        Edge e1 = Edge(v,c);
+        if (undirected){
+            Edge e2 = Edge(u,c);
+            e1.rev = adj[v].size();
+            e2.rev = adj[u].size();
+            adj[u].push_back(e1);
+            adj[v].push_back(e2);
+        }
+        else{
+            Edge e2 = Edge(u,0);
+            e1.rev = adj[v].size();
+            e2.rev = adj[u].size();
+            adj[u].push_back(e1);
+            adj[v].push_back(e2);
+        }
     }
     bool bfs() {
         for (int i=0;i<N;i++){level[i]=-1;}
@@ -39,8 +49,9 @@ struct maxflow{
         while (!que.empty()) {
             int cur = que.front(); que.pop();
             for (auto& it : adj[cur]) {
-                if (it->spare() > 0 && level[it->to] == -1) {
-                    que.push(it->to); level[it->to] = level[cur] + 1;
+                ll sp = it.spare();
+                if (sp > 0 && level[it.to] == -1) {
+                    que.push(it.to); level[it.to] = level[cur] + 1;
                 }
             }
         }
@@ -50,10 +61,12 @@ struct maxflow{
     ll dfs(int n, ll flow) {
         if (n == t) { return flow; }
         for (int& i = see[n]; i < (int)adj[n].size(); i++) {
-            int next = adj[n][i]->to;
-            if (adj[n][i]->spare() > 0 && level[next] == level[n] + 1) {
-                int f = dfs(next, min(flow, adj[n][i]->spare()));
-                if (f > 0) { adj[n][i]->add(f); return f; }
+            Edge& e = adj[n][i];
+            int next = e.to;
+            ll sp = e.spare();
+            if (sp > 0 && level[next] == level[n] + 1) {
+                ll f = dfs(next, min(flow, sp));
+                if (f > 0) { add(e,f); return f; }
             }
         }
         return 0;
@@ -71,7 +84,6 @@ struct maxflow{
         return ret;
     }
 };
-
 
 // Hopcroft-Karp O(E*sqrt(V))
 // 0-based이다
@@ -143,33 +155,33 @@ struct bimatch{
 // 단방향이다
 // edge의 cost까지도 추가해줘야 한다
 
-struct Edge {
-	int to;
-	ll cap, flow, cost;
-	Edge* reverse;
-	Edge(int _to, ll _cap, ll _cost) :to(_to), cap(_cap), cost(_cost), flow(0) {}
-	ll spare() { return cap - flow; }
-	void add(ll f) {
-		this->flow += f;
-		reverse->flow -= f;
-	}
-};
 struct MCMF{
-	int N,M,s,t;
-	vector<vector<Edge*>> adj;
+    struct Edge {
+        int to,rev;
+        ll cap, flow, cost;
+        Edge(){to=rev=cap=flow=cost=0;}
+        Edge(int _to, ll _cap, ll _cost) :to(_to), cap(_cap), cost(_cost), flow(0) {}
+        ll spare() { return cap - flow; }
+    };
+	int N,s,t;
+	vector<vector<Edge>> adj;
 
 	MCMF(){N=s=t=0;}
 	MCMF(int _n, int _s, int _t){
 		N=_n; s=_s; t=_t;
 		adj.resize(N);
 	}
-
-	void addEdge(int from, int to, ll cap, ll cost) {
-		Edge* e1 = new Edge(to, cap, cost);
-		Edge* e2 = new Edge(from, 0, -cost);
-		e1->reverse = e2; e2->reverse = e1;
-		adj[from].push_back(e1);
-		adj[to].push_back(e2);
+    void add(Edge& e, ll inc) {
+        e.flow+=inc;
+        adj[e.to][e.rev].flow-=inc;
+    }
+	void addEdge(int u, int v, ll cap, ll cost) {
+        Edge e1 = Edge(v,cap,cost);
+        Edge e2 = Edge(u,0,-cost);
+        e1.rev = adj[v].size();
+        e2.rev = adj[u].size();
+        adj[u].push_back(e1);
+        adj[v].push_back(e2);
 	}
 
 	pair<ll, ll> query() {
@@ -185,12 +197,12 @@ struct MCMF{
 			que.push(s); inque[s] = true; dis[s] = 0;
 			while (!que.empty()) {
 				int cur = que.front(); que.pop(); inque[cur] = false;
-				for (auto it : adj[cur]) {
-					if (it->spare() > 0 && dis[it->to] > dis[cur] + it->cost) {
-						if (!inque[it->to]) { que.push(it->to); inque[it->to] = true; }
-						dis[it->to] = dis[cur] + it->cost;
-						prev[it->to] = cur;
-						path[it->to] = it;
+				for (auto& it : adj[cur]) {
+					if (it.spare() > 0 && dis[it.to] > dis[cur] + it.cost) {
+						if (!inque[it.to]) { que.push(it.to); inque[it.to] = true; }
+						dis[it.to] = dis[cur] + it.cost;
+						prev[it.to] = cur;
+						path[it.to] = &it;
 					}
 				}
 			}
@@ -202,7 +214,7 @@ struct MCMF{
 			fans += flow;
 			for (ll i = t; i != s; i = prev[i]) {
 				cans += path[i]->cost;
-				path[i]->add(fans);
+				add(*path[i],fans);
 			}
 		}
 		ret.first = fans;
@@ -217,21 +229,17 @@ struct MCMF{
 // LR-edge만 추가하면 query에서 자동으로 나머지 edge를 만들어준다.
 // query함수는 존재하지 않을 경우에는 ans[0]=-1이 담긴 벡터를 리턴한다
 
-struct Edge{
-    int to;
-    ll c,f;
-    Edge* reverse;
-    Edge(int _to, ll _c) : to(_to), c(_c), f(0) {}
-    ll spare() { return c - f; }
-    void add(ll inc) {
-        f+=inc;
-        reverse->f -= inc;
-    }
-};
 struct circulation{
+    struct Edge{
+        int to,rev;
+        ll c,f;
+        Edge(){c=f=0;}
+        Edge(int _to, ll _c) : to(_to), c(_c), f(0) {}
+        ll spare() { return c - f; }
+    };
     int N,M,s,t;
-    vector<vector<Edge*>> adj;
-	vector<Edge*> E;
+    vector<vector<Edge>> adj;
+	vector<pi> E;
 	vector<ll> D,LB;
     vector<int> level,see;
     queue<int> que;
@@ -246,22 +254,28 @@ struct circulation{
         level.resize(N);
         see.resize(N);
     }
+    void add(Edge& e, ll inc) {
+        e.f+=inc;
+        adj[e.to][e.rev].f -= inc;
+    }
     void addEdge(int u, int v, ll c) {
-        Edge* e1 = new Edge(v, c);
-        Edge* e2 = new Edge(u, 0);
-        e1->reverse = e2; e2->reverse = e1;
+        Edge e1 = Edge(v,c);
+        Edge e2 = Edge(u,0);
+        e1.rev = adj[v].size();
+        e2.rev = adj[u].size();
         adj[u].push_back(e1);
         adj[v].push_back(e2);
     }
     void addLREdge(int u, int v, ll l, ll r, int idx) {
 		D[u]+=l; D[v]-=l;
-        Edge* e1 = new Edge(v, r-l);
-        Edge* e2 = new Edge(u, 0);
-		LB[idx] = l;
-		E[idx] = e1;
-        e1->reverse = e2; e2->reverse = e1;
+        Edge e1 = Edge(v,r-l);
+        Edge e2 = Edge(u,0);
+        e1.rev = adj[v].size();
+        e2.rev = adj[u].size();
         adj[u].push_back(e1);
         adj[v].push_back(e2);
+		LB[idx] = l;
+		E[idx] = {u,adj[u].size()-1};
     }
     bool bfs() {
         for (int i=0;i<N;i++){level[i]=-1;}
@@ -269,8 +283,9 @@ struct circulation{
         while (!que.empty()) {
             int cur = que.front(); que.pop();
             for (auto& it : adj[cur]) {
-                if (it->spare() > 0 && level[it->to] == -1) {
-                    que.push(it->to); level[it->to] = level[cur] + 1;
+                ll sp = it.spare();
+                if (sp > 0 && level[it.to] == -1) {
+                    que.push(it.to); level[it.to] = level[cur] + 1;
                 }
             }
         }
@@ -280,10 +295,11 @@ struct circulation{
     ll dfs(int n, ll flow) {
         if (n == t) { return flow; }
         for (int& i = see[n]; i < (int)adj[n].size(); i++) {
-            int next = adj[n][i]->to;
-            if (adj[n][i]->spare() > 0 && level[next] == level[n] + 1) {
-                int f = dfs(next, min(flow, adj[n][i]->spare()));
-                if (f > 0) { adj[n][i]->add(f); return f; }
+            int next = adj[n][i].to;
+            ll sp = adj[n][i].spare();
+            if (sp > 0 && level[next] == level[n] + 1) {
+                ll f = dfs(next, min(flow, sp));
+                if (f > 0) { add(adj[n][i],f);return f; }
             }
         }
         return 0;
@@ -309,7 +325,8 @@ struct circulation{
         }
 		if (in!=out || in!=ret){ ans.resize(1); ans[0]=-1; return ans;}
 		for (int i=0;i<M;i++){
-			ans[i] = LB[i]+E[i]->f;
+            int u,idx; u = E[i].first; idx = E[i].second;
+			ans[i] = LB[i]+adj[u][idx].f;
 		}
         return ans;
     }
