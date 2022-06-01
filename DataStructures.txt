@@ -9,13 +9,13 @@ struct DSU {
         member.resize(n);
         for (int i = 0; i < n; i++) { parent[i] = -1; member[i] = 1; }
     }
-    int findRoot(int n) {
+    int root(int n) {
         if (parent[n] == -1) { return n; }
-        return parent[n] = findRoot(parent[n]);
+        return parent[n] = root(parent[n]);
     }
-    void makeUnion(int r1, int r2) {
-        r1 = findRoot(r1);
-        r2 = findRoot(r2);
+    void union(int r1, int r2) {
+        r1 = root(r1);
+        r2 = root(r2);
         if (r1 == r2) { return; }
         if (member[r1] < member[r2]) { swap(r1, r2); }
         parent[r2] = r1;
