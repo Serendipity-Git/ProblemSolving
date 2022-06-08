@@ -13,7 +13,7 @@ struct DSU {
         if (parent[n] == -1) { return n; }
         return parent[n] = root(parent[n]);
     }
-    void union(int r1, int r2) {
+    void merge(int r1, int r2) {
         r1 = root(r1);
         r2 = root(r2);
         if (r1 == r2) { return; }
