@@ -494,6 +494,70 @@ struct maxsps {
     }
 };
 
+// min-max-queue 
+// queue 내의 min과 max값을 구할 수 있다.
+// 나머지 push,empty,pop,front는 일반 queue 연산과 같고
+// getmin, getmax 통해서 queue 내의 min,max 구할수 있다.
 
+template <typename T>
+struct minmaxqueue{
+    int N;
+    stack<T> s1,s2,ms1,ms2,Ms1,Ms2;
 
+    minmaxqueue<T>(){N=0;}
+    int size(){return N;}
+    bool empty(){return (N==0)? true:false;}
+
+    void push(T x){
+        if (s2.empty()){ms2.push(x); Ms2.push(x);}
+        else{
+            if (ms2.top()>x){ms2.push(x);}
+            else{ms2.push(ms2.top());}
+            if (Ms2.top()<x){Ms2.push(x);}
+            else{Ms2.push(Ms2.top());}
+        }
+        s2.push(x);
+        ++N;
+    };
+
+    T front(){
+        if (s1.empty()){
+            while(!ms2.empty()){ms2.pop();}
+            while(!Ms2.empty()){Ms2.pop();}
+            while(!s2.empty()){
+                T tmp = s2.top(); s2.pop();
+                if (s1.empty()){ms1.push(tmp); Ms1.push(tmp);}
+                else{
+                    if (ms1.top()>tmp){ms1.push(tmp);}
+                    else{ms1.push(ms1.top());}
+                    if (Ms1.top()<tmp){Ms1.push(tmp);}
+                    else{Ms1.push(Ms1.top());}
+                }
+                s1.push(tmp);             
+            }
+        }  
+        T ret = s1.top();
+        return ret;
+    };
+    void pop(){
+        T tmp = front();
+        s1.pop(); ms1.pop(); Ms1.pop();
+        --N;
+    };
+
+    T getmin(){
+        T ret;
+        if (!ms1.empty() && !ms2.empty()){ret = min(ms1.top(),ms2.top());}
+        else if (!ms1.empty()){ret=ms1.top();}
+        else{ret=ms2.top();}
+        return ret;
+    };
+    T getmax(){
+        T ret;
+        if (!Ms1.empty() && !Ms2.empty()){ret=max(Ms1.top(),Ms2.top());}
+        else if (!Ms1.empty()){ret=Ms1.top();}
+        else{ret=Ms2.top();}
+        return ret;
+    };
+};
 
