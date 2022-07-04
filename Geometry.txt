@@ -1,0 +1,72 @@
+// basic vector
+template<typename T>
+struct vec{
+    T x,y;
+    vec(){x=y=0;}
+    vec(T _x, T _y){x=_x; y=_y;}
+    vec operator- (const vec& v){
+        vec ret = vec(x-v.x,y-v.y);
+        return ret;
+    }
+    vec operator+ (const vec& v){
+        vec ret = vec(x+v.x,y+v.y);
+        return ret;
+    }
+    T cross(const vec&v){
+        return x*v.y - y*v.x;
+    };
+};
+
+// 선분 교차
+template<typename T>
+struct segment{
+    struct vec{
+        T x,y;
+        vec(){x=y=0;}
+        vec(T _x, T _y){x=_x; y=_y;}
+        vec operator- (const vec& v){
+            vec ret = vec(x-v.x,y-v.y);
+            return ret;
+        }
+        vec operator+ (const vec& v){
+            vec ret = vec(x+v.x,y+v.y);
+            return ret;
+        }
+        T cross(const vec&v){
+            return x*v.y - y*v.x;
+        };
+    };
+
+    T x1,y1,x2,y2;
+    segment(){x1=y1=x2=y2=0;}
+    segment(T _x1, T _y1, T _x2, T _y2){
+        x1=_x1;y1=_y1;x2=_x2;y2=_y2;
+        if (x1>x2 || x1==x2&&y1>y2){swap(x1,x2); swap(y1,y2);}
+    }
+    bool operator <(const segment& v){
+        if (x1==v.x1){return y1<v.y1;}
+        else{return x1<v.x1;}
+    }
+    bool parallel (const segment& v){
+        vec v1,v2;
+        v1 = vec(x2-x1, y2-y1);
+        v2 = vec(v.x2-v.x1, v.y2-v.y1);
+        if (v1.cross(v2)==0){return true;}
+        else{return false;}
+    }
+    bool meet(const segment& v){
+        vec v1,v2,v3,v4,v5,v6;
+        v1=vec(v.x1-x1,v.y1-y1);
+        v2=vec(x2-x1,y2-y1);
+        v3=vec(v.x2-x1,v.y2-y1);
+        v4=vec(x1-v.x1,y1-v.y1);
+        v5=vec(v.x2-v.x1,v.y2-v.y1);
+        v6=vec(x2-v.x1,y2-v.y1);
+        if (v2.cross(v1)>0&&v2.cross(v3)>0 || v2.cross(v1)<0&&v2.cross(v3)<0){return false;}
+        if (v5.cross(v4)>0&&v5.cross(v6)>0 || v5.cross(v4)<0&&v5.cross(v6)<0){return false;}
+        if (v2.cross(v1)==0 && v2.cross(v3)==0){
+            if (x1>v.x2 || x1==v.x2&&y1>v.y2 || v.x1>x2 || v.x1==x2&&v.y1>y2){return false;}
+        }
+        return true;
+    }
+};
