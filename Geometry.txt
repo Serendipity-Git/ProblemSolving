@@ -70,3 +70,74 @@ struct segment{
         return true;
     }
 };
+
+
+// point struct
+template<typename T>
+struct pt{
+    T x,y;
+    pt(){x=y=0;}
+    pt(T _x, T _y){
+        x=_x; y=_y;
+    }
+};
+
+
+// Convex Hull
+// include_colinear variable로 같은 직선 위의 점들을 모두 포함할 것인지 선택가능하다.
+// query함수로 convex hull을 이루는 실제 점들을 pt배열로 리턴한다 (0-based)
+
+template<typename T>
+struct convexhull{
+    int sz;
+    bool include_colinear;
+    vector<pt<T>> v;
+
+    convexhull(){sz=0; include_colinear=false;}
+    convexhull(int n, bool co=false){
+        sz=n;
+        v.resize(n);
+        include_colinear = co;
+    }
+    int orientation(pt<T>& a, pt<T>& b, pt<T>& c){
+        T ret = a.x*(b.y-c.y) + b.x*(c.y-a.y) + c.x*(a.y-b.y);
+        if (ret<0){return -1;}
+        else if (ret>0){return 1;}
+        else{return 0;}
+    };
+    bool ccw(pt<T>& a, pt<T>& b, pt<T>& c, bool include_colinear=false){
+        int o = orientation(a,b,c);
+        return o>0 || (include_colinear&&o==0);
+    };
+    bool colinear(pt<T>& a, pt<T>& b, pt<T>& c){
+        return orientation(a,b,c)==0;
+    };
+
+    vector<pt<T>> query(){
+        vector<pt<T>> ret;
+        pt<T> p0 = *min_element(v.begin(),v.end(),[&](pt<T>&a, pt<T>&b){
+            return make_pair(a.y,a.x)<make_pair(b.y,b.x);
+        });
+
+        sort(v.begin(),v.end(),[&](pt<T>&a, pt<T>&b){
+            T o = orientation(p0,a,b);
+            if (o==0){
+                return (p0.x-a.x)*(p0.x-a.x)+(p0.y-a.y)*(p0.y-a.y)<(p0.x-b.x)*(p0.x-b.x)+(p0.y-b.y)*(p0.y-b.y);
+            }else{
+                return o>0;
+            }
+        });
+        if (include_colinear){
+            int i = sz-1;
+            while(i>=0 && colinear(p0,v.back(),v[i])){--i;}
+            reverse(v.begin()+i+1,v.end());
+        }
+
+        for (int i=0;i<sz;i++){
+            while(ret.size()>1 && !ccw(ret[ret.size()-2], ret[ret.size()-1],v[i], include_colinear)){ret.pop_back();}
+            ret.push_back(v[i]);
+        }
+
+        return ret;
+    };
+};
