@@ -32,3 +32,5 @@ https://codeforces.com/contest/1484/problem/E
 https://codeforces.com/contest/1557/problem/E
 https://codeforces.com/contest/1556/problem/F
 https://codeforces.com/contest/1567/problem/F
+https://codeforces.com/contest/1706/problem/E
+https://codeforces.com/contest/1704/problem/E
