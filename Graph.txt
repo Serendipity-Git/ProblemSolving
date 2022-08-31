@@ -1,40 +1,37 @@
-// 0-based 사용했다
-struct dijkstra {
-    ll s;
-    vector<vector<ll>> adj;
-    vector<vector<ll>> cost;
-    vector<ll> dist;
+// 1-based 사용했다
+struct dijkstra{
+    int N,s;
+    vector<vector<pii>> adj;
+    vector<ll> dis;
+    vector<bool> vis;
     priority_queue<pii> pq;
 
-
-    dijkstra() { s = 0; }
-    dijkstra(ll n, ll _s) {
-        adj.resize(n);
-        dist.resize(n);
-        cost.resize(n);
-        dist.resize(n);
-        for (int i = 0; i < n; i++) { dist[i] = LLINF; }
-        s = _s;
+    dijkstra(int N, int s):N(N),s(s){
+        adj.resize(N+1);
+        dis.resize(N+1);
+        vis.resize(N+1);
+        fill(dis.begin(),dis.end(),LLINF);
     }
-    
-    // u->v로 가는, 가중치 c의 edge를 생성한다
-    void addEdge(ll u, ll v, ll c) {
-        adj[u].push_back(v);
-        cost[u].push_back(c);
+    void addEdge(int u, int v, ll c, bool undirected=0){
+        if (undirected){
+            adj[u].emplace_back(v,c);
+            adj[v].emplace_back(u,c);
+        }else{
+            adj[u].emplace_back(v,c);
+        }
     }
-
-    // dijkstra를 수행한다
-    void find() { 
-        dist[s]=0;
-        pq.push(make_pair(0, s));
-        while (!pq.empty()) {
+    void query(){
+        dis[s]=0; pq.push({0,s});
+        while(!pq.empty()){
             pii tmp = pq.top(); pq.pop();
-            ll cur = tmp.second;
-            if (dist[cur] < -tmp.first) { continue; }
-            for (int i = 0; i < adj[cur].size(); i++) {
-                if (dist[adj[cur][i]] > dist[cur] + cost[cur][i]) {
-                    pq.push(make_pair(-dist[cur] - cost[cur][i], adj[cur][i]));
-                    dist[adj[cur][i]] = dist[cur]+cost[cur][i];
+            if (vis[tmp.second]){continue;}
+            int u = tmp.second; vis[u]=1;
+            for (pii& e:adj[u]){
+                int v; ll w;
+                v=e.first; w=e.second;
+                if (!vis[v] && dis[v]>dis[u]+w){
+                    dis[v] = dis[u]+w;
+                    pq.push({-dis[v],v});
                 }
             }
         }
