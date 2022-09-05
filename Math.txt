@@ -59,7 +59,7 @@ ll gcd (ll a, ll b) {
    if (a == 0) return b;
    return gcd(b % a, a);
 }
-ll LCM(ll a, ll b){
+ll lcm(ll a, ll b){
 	return a*b/gcd(a,b);
 }
 
@@ -247,9 +247,9 @@ __builtin_ctz(x) = 2 : x에서 마지막 1 뒤의 0 세줌
 // power(X,Y,MOD) O(logY)
 ll power(ll x, ll y, ll MOD) {
     if (y == 0) { return 1; }
-    if (y % 2) { return power(x, y - 1) * x % MOD; }
+    if (y % 2) { return power(x, y - 1, MOD) * x % MOD; }
     else {
-        ll ret = power(x, y / 2);
+        ll ret = power(x, y / 2, MOD);
         ret *= ret; ret %= MOD;
         return ret;
     }
@@ -258,7 +258,7 @@ ll power(ll x, ll y, ll MOD) {
 // divide(X,Y,MOD) O(logMOD)
 // MOD 소수이고 Y와 MOD가 서로소일때
 ll divide(ll x, ll y, ll MOD) {
-    return x * power(y, MOD - 2) % MOD;
+    return x * power(y, MOD - 2, MOD) % MOD;
 }
 
 // Binary search
