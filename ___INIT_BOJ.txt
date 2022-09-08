@@ -7,6 +7,12 @@
 #define prntyes cout<<"Yes\n";
 #define prntno cout<<"No\n";
 using namespace std;
+#ifdef LOCAL
+#include "___debug.h"
+#define debug(x...) cerr << "[" << #x << "] = ["; _print(x)
+#else
+#define debug(x...)
+#endif
 typedef long long ll;
 typedef unsigned long ul;
 typedef unsigned long long ull;
