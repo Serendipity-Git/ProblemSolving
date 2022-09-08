@@ -7,7 +7,7 @@
 #define prntyes cout<<"Yes\n";
 #define prntno cout<<"No\n";
 using namespace std;
-#ifdef LOCAL
+#ifndef ONLINE_JUDGE
 #include "___debug.h"
 #define debug(x...) cerr << "[" << #x << "] = ["; _print(x)
 #else
