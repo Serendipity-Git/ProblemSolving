@@ -126,24 +126,54 @@ struct KMP{
 // Trie (여러개의 단어에서 여러개의 단어를 찾을때)
 // O(sum pattern + sum query)
 
+struct Trie{
+    int sz;
+    vector<int> tmp,leaf;
+    vector<vector<int>> next;
+
+    Trie(int a){
+        sz=1;
+        leaf.push_back(0);
+        tmp.resize(a,-1);
+        next.push_back(tmp);
+    }
+    void add(int v, int c){
+        next[v][c]=sz;
+        leaf.push_back(0);
+        next.push_back(tmp);
+        ++sz;
+    }
+    void insert(string& s){
+        int n = s.length();
+        int cur=0;
+        for (int i=0;i<n;i++){
+            int c = s[i]-'a';
+            if (next[cur][c]==-1){
+                add(cur,c);
+            }
+            cur=next[cur][c];
+        }
+        leaf[cur]++;
+    }
+};
+
 
 // Aho-Corasick (하나의 text에서 여러개의 패턴이 "각각 포함되어 있나" 찾아볼때)
 // O(text + sum pattern)
 
 struct ahocorasick{
-    int sz,alpha;
-    vector<int> par,pch,cache1,leaf,cnt;
+    int sz;
+    vector<int> par,pch,cache1,leaf,cnt,tmp;
     vector<vector<int>> next,cache2;
     ahocorasick(int a){
-        sz=1; alpha=a;
+        sz=1;
         par.push_back(0); pch.push_back(0); cache1.push_back(0); leaf.push_back(0); cnt.push_back(0);
-        vector<int> tmp(alpha,-1);
+        tmp.resize(a,-1);
         next.push_back(tmp); cache2.push_back(tmp);
     }
     void add(int v, int c){
         next[v][c]=sz;
         par.push_back(v); pch.push_back(c); cache1.push_back(-1); leaf.push_back(0); cnt.push_back(-1);
-        vector<int> tmp(alpha,-1);
         next.push_back(tmp); cache2.push_back(tmp);
         ++sz;
     }
