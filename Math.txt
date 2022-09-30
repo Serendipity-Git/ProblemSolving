@@ -261,6 +261,25 @@ ll divide(ll x, ll y, ll MOD) {
     return x * power(y, MOD - 2, MOD) % MOD;
 }
 
+// BSGS(X,Y,MOD) O(sqrtMOD*logMOD)
+// X^n == Y (mod MOD)의 가장 작은 n을 찾을 때
+ll BSGS(ll x, ll y, ll MOD){
+    ll k = sqrt(MOD);
+    map<ll,ll> mp;
+    for (ll i=0;i<k;i++){
+        ll div = divide(y,power(x,i,MOD),MOD);
+        // mp[x]=i;
+        if (mp.find(div)==mp.end()){mp[div]=i;}
+    }
+    for (ll i=0;i*k<MOD;i++){
+        ll div = power(x,i*k,MOD);
+        if (mp.find(div)!=mp.end()){
+            return mp[div]+i*k;
+        }
+    }
+    return -1;
+}
+
 // Binary search
 int lower_bound(int n){
 	int lo, hi, mid;
