@@ -418,7 +418,6 @@ struct lazy_xorseg {
 };
 
 
-
 // Sparse Table (0-based)
 범위 [L,R]이 주어졌을 때 Function(L,L+1,...,R)을 빠르게 한다
 조건1) Array에 저장된 값이 변하면 안된다.
@@ -561,3 +560,31 @@ struct minmaxqueue{
     };
 };
 
+
+// PBDS set
+#include <ext/pb_ds/assoc_container.hpp>
+#include <ext/pb_ds/tree_policy.hpp>
+using namespace __gnu_pbds;
+#define pbds tree<int, null_type, less<int>, rb_tree_tag,tree_order_statistics_node_update>
+
+// pbds st;
+// st.insert(x) : set에 x 삽입
+// st.erase(x) : set에서 x 삭제
+// st.find_by_order(x) : set을 일차원 배열로 생각했을 때 x+1번째 원소 포인터 반환
+// st.order_of_key(x) : set에서 x보다 작은 원소 개수 반환
+
+
+// PBDS multiset
+#include <ext/pb_ds/assoc_container.hpp>
+#include <ext/pb_ds/tree_policy.hpp>
+using namespace __gnu_pbds;
+#define pbds tree<int, null_type, less_equal<int>, rb_tree_tag,tree_order_statistics_node_update>
+void m_erase(pbds& st, int x){
+    int p = st.order_of_key(x);
+    if (*st.find_by_order(p)==x){st.erase(st.find_by_order(p));}
+}
+// pbds st;
+// st.insert(x) : multiset에 x 삽입
+// m_erase(st, x) : multiset에서 x 삭제
+// st.find_by_order(x) : multiset을 일차원 배열로 생각했을 때 x+1번째 원소 포인터 반환
+// st.order_of_key(x) : multiset에서 x보다 작은 원소 개수 반환
