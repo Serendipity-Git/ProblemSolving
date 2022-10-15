@@ -62,162 +62,451 @@ struct fenwick {
     }
 };
 
-// Segment Tree (1-based)
+// Segment Tree (0-based)
 // 구간 [L,R]에 관련된 쿼리를 반복적으로 처리해야 할 때 생각한다.
 
-struct sumseg {
+struct sumseg{
     int N;
-    vector<ll> a, seg;
-    sumseg() { N = 0; }
-    sumseg(int n) {
-        N = n; 
-        int M=1;
-        while(M<N){M<<=1;}
-        a.resize(n + 1);
-        seg.resize(M<<1);
+    vector<ll> a,seg;
+    sumseg(){N=0;}
+    sumseg(int n){
+        N=n;
+        a.resize(N);
+        seg.resize(2*N);
     }
-
-    void maketree(int left, int right, int node) {
-        if (left == right) { seg[node] = a[left]; return; }
-        int mid = (left + right)>>1;
-        maketree(left, mid, node<<1);
-        maketree(mid + 1, right, (node<<1) + 1);
-        seg[node] = seg[node<<1] + seg[(node<<1) + 1];
+    void init(){
+        for (int i=0;i<N;i++){seg[i+N]=a[i];}
+        for (int i=N-1;i>=1;i--){
+            seg[i] = seg[i<<1]+seg[i<<1|1];
+        }
     }
-    void update(int left, int right, int which, ll val, int node) {
-        if (left == right) { a[which] = val; seg[node] = a[left]; return; }
-        int mid = (left + right)>>1;
-        if (which <= mid) { update(left, mid, which, val, node<<1); }
-        else { update(mid + 1, right, which, val, (node<<1) + 1); }
-        seg[node] = seg[(node<<1)] + seg[(node<<1) + 1];
+    void update(int i, ll val){
+        a[i] = val;
+        seg[i+N]=val;
+        int p = (i+N)>>1;
+        while(p>0){
+            seg[p] = seg[p<<1]+seg[p<<1|1];
+            p>>=1;
+        }
     }
-    ll query(int left, int right, int from, int to, int node) {
-        if (right<from || left>to) { return 0; }
-        if (from <= left && right <= to) { return seg[node]; }
-        int mid = (left + right)>>1;
-        ll ret = query(left, mid, from, to, (node<<1)) + query(mid + 1, right, from, to, (node<<1) + 1);
+    ll query(int l, int r){
+        if (l>r){return 0LL;}
+        ll ret=0;
+        int lp,rp;
+        lp = l+N; rp=r+N+1;
+        while(lp<rp){
+            if (lp&1){ret+=seg[lp++];}
+            if (rp&1){ret+=seg[--rp];}
+            lp>>=1; rp>>=1;
+        }
         return ret;
     }
-    void maketree() { maketree(1, N, 1); }
-    void update(int which, ll val) { update(1, N, which, val, 1); }
-    ll query(int from, int to) { return query(1, N, from, to, 1); }
 };
 
-struct gcdseg {
-    ll N;
-    vector<ll> a, seg;
-    gcdseg() { N = 0; }
-    gcdseg(ll n) {
-        N = n; 
-        int M=1;
-        while(M<N){M<<=1;}
-        a.resize(n + 1);
-        seg.resize(M<<1);
-    }
-
-    void maketree(int left, int right, int node) {
-        if (left == right) { seg[node] = a[left]; return; }
-        int mid = (left + right)>>1;
-        maketree(left, mid,(node<<1));
-        maketree(mid + 1, right, (node<<1) + 1);
-        seg[node] = gcd(seg[(node<<1)], seg[(node<<1) + 1]);
-    }
-    void update(int left, int right, int which, ll val, int node) {
-        if (left == right) { a[which] = val; seg[node] = a[left]; return; }
-        int mid = (left + right)>>1;
-        if (which <= mid) { update(left, mid, which, val, (node<<1)); }
-        else { update(mid + 1, right, which, val, (node<<1) + 1); }
-        seg[node] = gcd(seg[(node<<1)], seg[(node<<1) + 1]);
-    }
-    ll query(int left, int right, int from, int to, int node) {
-        if (right<from || left>to) { return 0; }
-        if (from <= left && right <= to) { return seg[node]; }
-        int mid = (left + right)>>1;
-        ll ret = gcd(query(left, mid, from, to, node * 2), query(mid + 1, right, from, to, node * 2 + 1));
-        return ret;
-    }
-    void maketree() { maketree(1, N, 1); }
-    void update(int which, ll val) { update(1, N, which, val, 1); }
-    ll query(ll from, ll to) { return query(1, N, from, to, 1); }
-};
-
-struct maxseg {
+struct maxseg{
     int N;
-    vector<ll> a, seg;
-    maxseg() { N = 0; }
-    maxseg(int n) {
-        N = n; 
-        int M=1;
-        while(M<N){M<<=1;}
-        a.resize(n + 1);
-        seg.resize(M<<1);
+    vector<ll> a,seg;
+    maxseg(){N=0;}
+    maxseg(int n){
+        N=n;
+        a.resize(N);
+        seg.resize(2*N);
     }
-
-    void maketree(int left, int right, int node) {
-        if (left == right) { seg[node] = a[left]; return; }
-        int mid = (left + right) / 2;
-        maketree(left, mid, node * 2);
-        maketree(mid + 1, right, node * 2 + 1);
-        seg[node] = max(seg[node * 2], seg[node * 2 + 1]);
+    void init(){
+        for (int i=0;i<N;i++){seg[i+N]=a[i];}
+        for (int i=N-1;i>=1;i--){
+            seg[i] = max(seg[i<<1],seg[i<<1|1]);
+        }
     }
-    void update(int left, int right, int which, ll val, int node) {
-        if (left == right) { a[which] = val; seg[node] = a[left]; return; }
-        int mid = (left + right) / 2;
-        if (which <= mid) { update(left, mid, which, val, node * 2); }
-        else { update(mid + 1, right, which, val, node * 2 + 1); }
-        seg[node] = max(seg[node * 2], seg[node * 2 + 1]);
+    void update(int i, ll val){
+        a[i] = val;
+        seg[i+N]=val;
+        int p = (i+N)>>1;
+        while(p>0){
+            seg[p] = max(seg[p<<1],seg[p<<1|1]);
+            p>>=1;
+        }
     }
-    ll query(int left, int right, int from, int to, int node) {
-        if (right<from || left>to) { return -LLINF; }
-        if (from <= left && right <= to) { return seg[node]; }
-        int mid = (left + right) / 2;
-        ll ret = max(query(left, mid, from, to, node * 2), query(mid + 1, right, from, to, node * 2 + 1));
+    ll query(int l, int r){
+        if (l>r){return -LLINF;}
+        ll ret=-LLINF;
+        int lp,rp;
+        lp = l+N; rp=r+N+1;
+        while(lp<rp){
+            if (lp&1){ret=max(ret,seg[lp++]);}
+            if (rp&1){ret=max(ret,seg[--rp]);}
+            lp>>=1; rp>>=1;
+        }
         return ret;
     }
-    void maketree() { maketree(1, N, 1); }
-    void update(int which, ll val) { update(1, N, which, val, 1); }
-    ll query(int from, int to) { return query(1, N, from, to, 1); }
 };
 
-struct minseg {
+struct minseg{
     int N;
-    vector<ll> a, seg;
-    minseg() { N = 0; }
-    minseg(int n) {
-        N = n; 
-        int M=1;
-        while(M<N){M<<=1;}
-        a.resize(n + 1);
-        seg.resize(M<<1);
+    vector<ll> a,seg;
+    minseg(){N=0;}
+    minseg(int n){
+        N=n;
+        a.resize(N);
+        seg.resize(2*N);
     }
-
-    void maketree(int left, int right, int node) {
-        if (left == right) { seg[node] = a[left]; return; }
-        int mid = (left + right) / 2;
-        maketree(left, mid, node * 2);
-        maketree(mid + 1, right, node * 2 + 1);
-        seg[node] = min(seg[node * 2], seg[node * 2 + 1]);
+    void init(){
+        for (int i=0;i<N;i++){seg[i+N]=a[i];}
+        for (int i=N-1;i>=1;i--){
+            seg[i] = min(seg[i<<1],seg[i<<1|1]);
+        }
     }
-    void update(int left, int right, int which, ll val, int node) {
-        if (left == right) { a[which] = val; seg[node] = a[left]; return; }
-        int mid = (left + right) / 2;
-        if (which <= mid) { update(left, mid, which, val, node * 2); }
-        else { update(mid + 1, right, which, val, node * 2 + 1); }
-        seg[node] = min(seg[node * 2], seg[node * 2 + 1]);
+    void update(int i, ll val){
+        a[i] = val;
+        seg[i+N]=val;
+        int p = (i+N)>>1;
+        while(p>0){
+            seg[p] = min(seg[p<<1],seg[p<<1|1]);
+            p>>=1;
+        }
     }
-    ll query(int left, int right, int from, int to, int node) {
-        if (right<from || left>to) { return LLINF; }
-        if (from <= left && right <= to) { return seg[node]; }
-        int mid = (left + right) / 2;
-        ll ret = min(query(left, mid, from, to, node * 2), query(mid + 1, right, from, to, node * 2 + 1));
+    ll query(int l, int r){
+        if (l>r){return LLINF;}
+        ll ret=LLINF;
+        int lp,rp;
+        lp = l+N; rp=r+N+1;
+        while(lp<rp){
+            if (lp&1){ret=min(ret,seg[lp++]);}
+            if (rp&1){ret=min(ret,seg[--rp]);}
+            lp>>=1; rp>>=1;
+        }
         return ret;
     }
-    void maketree() { maketree(1, N, 1); }
-    void update(int which, ll val) { update(1, N, which, val, 1); }
-    ll query(int from, int to) { return query(1, N, from, to, 1); }
+};
+
+struct gcdseg{
+    int N;
+    vector<ll> a,seg;
+    gcdseg(){N=0;}
+    gcdseg(int n){
+        N=n;
+        a.resize(N);
+        seg.resize(2*N);
+    }
+    void init(){
+        for (int i=0;i<N;i++){seg[i+N]=a[i];}
+        for (int i=N-1;i>=1;i--){
+            seg[i] = gcd(seg[i<<1],seg[i<<1|1]);
+        }
+    }
+    void update(int i, ll val){
+        a[i] = val;
+        seg[i+N]=val;
+        int p = (i+N)>>1;
+        while(p>0){
+            seg[p] = gcd(seg[p<<1],seg[p<<1|1]);
+            p>>=1;
+        }
+    }
+    ll query(int l, int r){
+        if (l>r){return 0LL;}
+        ll ret=0;
+        int lp,rp;
+        lp = l+N; rp=r+N+1;
+        while(lp<rp){
+            if (lp&1){ret=gcd(ret,seg[lp++]);}
+            if (rp&1){ret=gcd(ret,seg[--rp]);}
+            lp>>=1; rp>>=1;
+        }
+        return ret;
+    }
 };
 
 
+// 2D Segment Tree (0-based)
+// 2차원 직사각형 영역에 관련된 쿼리를 반복적으로 처리해야 할 때 생각한다.
+// 공간 O(N*M)
+// init : O(N*M)
+// update : O(log*log)
+// query : O(log*log)
+struct sumseg2D{
+    int N,M;
+    vector<vector<ll>> a,seg;
+
+    sumseg2D(){N=M=0;}
+    sumseg2D(int n, int m){
+        N=n; M=m;
+        a.resize(N,vector<ll>(M));
+        seg.resize(2*N,vector<ll>(2*M));
+    }
+    void init(){
+        for (int j=0;j<N;j++){
+            for (int i=0;i<M;i++){
+                seg[j+N][i+M]=a[j][i];
+            }
+            for (int i=M-1;i>=1;i--){
+                seg[j+N][i] = seg[j+N][i<<1]+seg[j+N][i<<1|1];
+            }
+        }
+
+        for (int j=N-1;j>=1;j--){
+            for (int i=1;i<2*M;i++){
+                seg[j][i] = seg[j<<1][i]+seg[j<<1|1][i];
+            }
+        }
+    }
+    void update(int j, int i, ll val){
+        a[j][i]=val;
+        seg[j+N][i+M]=val;
+        int p = (i+M)>>1;
+        while(p>0){
+            seg[j+N][p] = seg[j+N][p<<1]+seg[j+N][p<<1|1];
+            p>>=1;
+        }
+
+        int q = (j+N)>>1;
+        while(q>0){
+            p = i+M;
+            while(p>0){
+                seg[q][p] = seg[q<<1][p]+seg[q<<1|1][p];
+                p>>=1;
+            }
+            q>>=1;
+        }
+    }
+    ll query1D(int q, int l, int r){
+        if (l>r){return 0LL;}
+        ll ret=0;
+        int lp,rp;
+        lp = l+M; rp=r+M+1;
+        while(lp<rp){
+            if (lp&1){ret+=seg[q][lp++];}
+            if (rp&1){ret+=seg[q][--rp];}
+            lp>>=1; rp>>=1;
+        }
+        return ret;
+    }
+    ll query(int j1, int j2, int i1, int i2){
+        if (j1>j2){return 0LL;}
+        ll ret=0;
+        int lp,rp;
+        lp=j1+N; rp=j2+N+1;
+        while(lp<rp){
+            if (lp&1){ret+=query1D(lp++,i1,i2);}
+            if (rp&1){ret+=query1D(--rp,i1,i2);}
+            lp>>=1; rp>>=1;
+        }
+        return ret;
+    }
+};
+
+struct maxseg2D{
+    int N,M;
+    vector<vector<ll>> a,seg;
+
+    maxseg2D(){N=M=0;}
+    maxseg2D(int n, int m){
+        N=n; M=m;
+        a.resize(N,vector<ll>(M));
+        seg.resize(2*N,vector<ll>(2*M));
+    }
+    void init(){
+        for (int j=0;j<N;j++){
+            for (int i=0;i<M;i++){
+                seg[j+N][i+M]=a[j][i];
+            }
+            for (int i=M-1;i>=1;i--){
+                seg[j+N][i] = max(seg[j+N][i<<1],seg[j+N][i<<1|1]);
+            }
+        }
+
+        for (int j=N-1;j>=1;j--){
+            for (int i=1;i<2*M;i++){
+                seg[j][i] = max(seg[j<<1][i],seg[j<<1|1][i]);
+            }
+        }
+    }
+    void update(int j, int i, ll val){
+        a[j][i]=val;
+        seg[j+N][i+M]=val;
+        int p = (i+M)>>1;
+        while(p>0){
+            seg[j+N][p] = max(seg[j+N][p<<1],seg[j+N][p<<1|1]);
+            p>>=1;
+        }
+
+        int q = (j+N)>>1;
+        while(q>0){
+            p = i+M;
+            while(p>0){
+                seg[q][p] = max(seg[q<<1][p],seg[q<<1|1][p]);
+                p>>=1;
+            }
+            q>>=1;
+        }
+    }
+    ll query1D(int q, int l, int r){
+        if (l>r){return -LLINF;}
+        ll ret=-LLINF;
+        int lp,rp;
+        lp = l+M; rp=r+M+1;
+        while(lp<rp){
+            if (lp&1){ret=max(ret,seg[q][lp++]);}
+            if (rp&1){ret=max(ret,seg[q][--rp]);}
+            lp>>=1; rp>>=1;
+        }
+        return ret;
+    }
+    ll query(int j1, int j2, int i1, int i2){
+        if (j1>j2){return -LLINF;}
+        ll ret=-LLINF;
+        int lp,rp;
+        lp=j1+N; rp=j2+N+1;
+        while(lp<rp){
+            if (lp&1){ret=max(ret,query1D(lp++,i1,i2));}
+            if (rp&1){ret=max(ret,query1D(--rp,i1,i2));}
+            lp>>=1; rp>>=1;
+        }
+        return ret;
+    }
+};
+
+struct minseg2D{
+    int N,M;
+    vector<vector<ll>> a,seg;
+
+    minseg2D(){N=M=0;}
+    minseg2D(int n, int m){
+        N=n; M=m;
+        a.resize(N,vector<ll>(M));
+        seg.resize(2*N,vector<ll>(2*M));
+    }
+    void init(){
+        for (int j=0;j<N;j++){
+            for (int i=0;i<M;i++){
+                seg[j+N][i+M]=a[j][i];
+            }
+            for (int i=M-1;i>=1;i--){
+                seg[j+N][i] = min(seg[j+N][i<<1],seg[j+N][i<<1|1]);
+            }
+        }
+
+        for (int j=N-1;j>=1;j--){
+            for (int i=1;i<2*M;i++){
+                seg[j][i] = min(seg[j<<1][i],seg[j<<1|1][i]);
+            }
+        }
+    }
+    void update(int j, int i, ll val){
+        a[j][i]=val;
+        seg[j+N][i+M]=val;
+        int p = (i+M)>>1;
+        while(p>0){
+            seg[j+N][p] = min(seg[j+N][p<<1],seg[j+N][p<<1|1]);
+            p>>=1;
+        }
+
+        int q = (j+N)>>1;
+        while(q>0){
+            p = i+M;
+            while(p>0){
+                seg[q][p] = min(seg[q<<1][p],seg[q<<1|1][p]);
+                p>>=1;
+            }
+            q>>=1;
+        }
+    }
+    ll query1D(int q, int l, int r){
+        if (l>r){return LLINF;}
+        ll ret=LLINF;
+        int lp,rp;
+        lp = l+M; rp=r+M+1;
+        while(lp<rp){
+            if (lp&1){ret=min(ret,seg[q][lp++]);}
+            if (rp&1){ret=min(ret,seg[q][--rp]);}
+            lp>>=1; rp>>=1;
+        }
+        return ret;
+    }
+    ll query(int j1, int j2, int i1, int i2){
+        if (j1>j2){return LLINF;}
+        ll ret=LLINF;
+        int lp,rp;
+        lp=j1+N; rp=j2+N+1;
+        while(lp<rp){
+            if (lp&1){ret=min(ret,query1D(lp++,i1,i2));}
+            if (rp&1){ret=min(ret,query1D(--rp,i1,i2));}
+            lp>>=1; rp>>=1;
+        }
+        return ret;
+    }
+};
+
+struct gcdseg2D{
+    int N,M;
+    vector<vector<ll>> a,seg;
+
+    gcdseg2D(){N=M=0;}
+    gcdseg2D(int n, int m){
+        N=n; M=m;
+        a.resize(N,vector<ll>(M));
+        seg.resize(2*N,vector<ll>(2*M));
+    }
+    void init(){
+        for (int j=0;j<N;j++){
+            for (int i=0;i<M;i++){
+                seg[j+N][i+M]=a[j][i];
+            }
+            for (int i=M-1;i>=1;i--){
+                seg[j+N][i] = gcd(seg[j+N][i<<1],seg[j+N][i<<1|1]);
+            }
+        }
+
+        for (int j=N-1;j>=1;j--){
+            for (int i=1;i<2*M;i++){
+                seg[j][i] = gcd(seg[j<<1][i],seg[j<<1|1][i]);
+            }
+        }
+    }
+    void update(int j, int i, ll val){
+        a[j][i]=val;
+        seg[j+N][i+M]=val;
+        int p = (i+M)>>1;
+        while(p>0){
+            seg[j+N][p] = gcd(seg[j+N][p<<1],seg[j+N][p<<1|1]);
+            p>>=1;
+        }
+
+        int q = (j+N)>>1;
+        while(q>0){
+            p = i+M;
+            while(p>0){
+                seg[q][p] = gcd(seg[q<<1][p],seg[q<<1|1][p]);
+                p>>=1;
+            }
+            q>>=1;
+        }
+    }
+    ll query1D(int q, int l, int r){
+        if (l>r){return 0;}
+        ll ret=0;
+        int lp,rp;
+        lp = l+M; rp=r+M+1;
+        while(lp<rp){
+            if (lp&1){ret=gcd(ret,seg[q][lp++]);}
+            if (rp&1){ret=gcd(ret,seg[q][--rp]);}
+            lp>>=1; rp>>=1;
+        }
+        return ret;
+    }
+    ll query(int j1, int j2, int i1, int i2){
+        if (j1>j2){return 0;}
+        ll ret=0;
+        int lp,rp;
+        lp=j1+N; rp=j2+N+1;
+        while(lp<rp){
+            if (lp&1){ret=gcd(ret,query1D(lp++,i1,i2));}
+            if (rp&1){ret=gcd(ret,query1D(--rp,i1,i2));}
+            lp>>=1; rp>>=1;
+        }
+        return ret;
+    }
+};
 
 
 // Lazy Propagation - 세그트리 update를 할때 원소 하나만 update하는게 아니라 [L,R] 범위를 모두 update할때 쓴다
