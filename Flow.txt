@@ -381,8 +381,8 @@ struct mcmf{
 
 // Circulation by Dinic O(V^2*E)
 // addEdge(u,v,l,r)로 edge 추가
-// maxflow != graph.sum이면 가능한 flow가 없는 것이다.
-// 설계한 flow graph의 edge를 모두 설정하고 init()으로 circulation graph를 만든다
+// maxflow > graph.sum이면 가능한 flow가 없는 것이다.
+// 설계한 circulation graph의 edge를 모두 설정하고 init()으로 circulation graph를 만든다
 // 가능한 flow가 존재한다면, E[e].l + E[e].f로 e에 흐르는 실제 flow를 구할 수 있다.
 
 struct circulation{
@@ -394,20 +394,19 @@ struct circulation{
 
     int N,s,t,s_,t_,M=0;
     ll sum=0;
-    vector<ll> in,out;
+    vector<ll> d;
     vector<int> level,see;
     vector<vector<int>> adj;
     vector<edge> E;
     queue<int> que;
-    
+
     circulation(int N, int s, int t, int s_, int t_):N(N),s(s),t(t),s_(s_), t_(t_){
-        in.resize(N);out.resize(N);
-        level.resize(N); see.resize(N);
+        level.resize(N); see.resize(N); d.resize(N);
         adj.resize(N);
     }
     void addEdge(int u, int v, ll l, ll r){
-        in[v]+=l;
-        out[u]+=l;
+        d[u]+=l;
+        d[v]-=l;
         E.emplace_back(u,v,r-l,l);
         E.emplace_back(v,u,0,0);
         adj[u].push_back(M);
@@ -417,11 +416,13 @@ struct circulation{
     void init(){
         for (int i=0;i<N;i++){
             if (i==s_ || i==t_){continue;}
-            addEdge(s_,i,0,in[i]);
-            addEdge(i,t_,0,out[i]);
-            sum+=in[i];
+            if (d[i]>0){
+                addEdge(i,t_,0,d[i]);
+                sum+=d[i];
+            }else if (d[i]<0){
+                addEdge(s_,i,0,-d[i]);
+            }
         }
-        addEdge(t,s,0,LLINF);
     }
     bool bfs(){
         fill(level.begin(),level.end(),-1);
