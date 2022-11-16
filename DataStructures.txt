@@ -511,7 +511,7 @@ struct gcdseg2D{
 
 // Lazy Propagation - 세그트리 update를 할때 원소 하나만 update하는게 아니라 [L,R] 범위를 모두 update할때 쓴다
 // 구간 update : O(logN)에 [L,R]을 update 할수있다.
-// (1-based)
+// (0-based)
 
 
 struct lazy_sumseg {
@@ -522,7 +522,7 @@ struct lazy_sumseg {
         N = n; 
         int M=1;
         while(M<N){M<<=1;}
-        a.resize(n + 1);
+        a.resize(n);
         seg.resize(M<<1);
         lazy.resize(M<<1);
     }
@@ -557,9 +557,9 @@ struct lazy_sumseg {
         int mid = (l + r) >> 1;
         return query(l, mid, from, to, node * 2) + query(mid + 1, r, from, to, node * 2 + 1);
     }
-    void maketree() { maketree(1, N, 1); }
-    void update(int from, int to, ll inc) { update(1, N, from, to, inc, 1); }
-    ll query(int from, int to) { return query(1, N, from, to, 1); }
+    void maketree() { maketree(0,N-1,1); }
+    void update(int from, int to, ll inc) { update(0,N-1, from, to, inc, 1); }
+    ll query(int from, int to) { return query(0,N-1, from, to, 1); }
 };
 
 struct lazy_maxseg {
@@ -570,7 +570,7 @@ struct lazy_maxseg {
         N = n; 
         int M=1;
         while(M<N){M<<=1;}
-        a.resize(n + 1);
+        a.resize(n);
         seg.resize(M<<1);
         lazy.resize(M<<1);
     }
@@ -605,9 +605,9 @@ struct lazy_maxseg {
         int mid = (l + r) >> 1;
         return max(query(l, mid, from, to, node * 2), query(mid + 1, r, from, to, node * 2 + 1));
     }
-    void maketree() { maketree(1, N, 1); }
-    void update(int from, int to, ll inc) { update(1, N, from, to, inc, 1); }
-    ll query(int from, int to) { return query(1, N, from, to, 1); }
+    void maketree() { maketree(0,N-1, 1); }
+    void update(int from, int to, ll inc) { update(0,N-1, from, to, inc, 1); }
+    ll query(int from, int to) { return query(0,N-1, from, to, 1); }
 };
 
 struct lazy_minseg {
@@ -618,7 +618,7 @@ struct lazy_minseg {
         N = n; 
         int M=1;
         while(M<N){M<<=1;}
-        a.resize(n + 1);
+        a.resize(n);
         seg.resize(M<<1);
         lazy.resize(M<<1);
     }
@@ -653,9 +653,9 @@ struct lazy_minseg {
         int mid = (l + r) >> 1;
         return min(query(l, mid, from, to, node * 2), query(mid + 1, r, from, to, node * 2 + 1));
     }
-    void maketree() { maketree(1, N, 1); }
-    void update(int from, int to, ll inc) { update(1, N, from, to, inc, 1); }
-    ll query(int from, int to) { return query(1, N, from, to, 1); }
+    void maketree() { maketree(0,N-1, 1); }
+    void update(int from, int to, ll inc) { update(0,N-1, from, to, inc, 1); }
+    ll query(int from, int to) { return query(0,N-1, from, to, 1); }
 };
 
 struct lazy_xorseg {
@@ -666,7 +666,7 @@ struct lazy_xorseg {
         N = n; 
         int M=1;
         while(M<N){M<<=1;}
-        a.resize(n + 1);
+        a.resize(n);
         seg.resize(M<<1);
         lazy.resize(M<<1);
     }
@@ -701,9 +701,55 @@ struct lazy_xorseg {
         int mid = (l + r) >> 1;
         return query(l, mid, from, to, node * 2) ^ query(mid + 1, r, from, to, node * 2 + 1);
     }
-    void maketree() { maketree(1, N, 1); }
-    void update(int from, int to, ll inc) { update(1, N, from, to, inc, 1); }
-    ll query(int from, int to) { return query(1, N, from, to, 1); }
+    void maketree() { maketree(0,N-1, 1); }
+    void update(int from, int to, ll inc) { update(0,N-1, from, to, inc, 1); }
+    ll query(int from, int to) { return query(0,N-1, from, to, 1); }
+};
+
+
+// Merge Sort Tree (0-based)
+// 구간 update는 없다
+// 각 노드에 정렬된 상태의 배열을 가지고 있다. (Space : NlogN)
+// operation을 정의해 사용한다. (Time : NlogN * operation)
+
+struct mergetree{
+    int N;
+    vector<ll> a;
+    vector<vector<ll>> seg;
+
+    mergetree(){N=0;}
+    mergetree(int n){
+        N=n;
+        a.resize(N);
+        seg.resize(2*N);
+    }
+    void init(){
+        for (int i=0;i<N;i++){seg[i+N].push_back(a[i]);}
+        for (int i=N-1;i>=1;i--){
+            seg[i].resize(seg[i<<1].size() + seg[i<<1|1].size());
+            merge(seg[i<<1].begin(), seg[i<<1].end(), seg[i<<1|1].begin(), seg[i<<1|1].end(), seg[i].begin());
+        }
+    }
+    ll query(int l, int r){
+        if (l>r){return 0LL;}
+        ll ret=0;
+        int lp,rp;
+        lp = l+N; rp=r+N+1;
+        while(lp<rp){
+            if (lp&1){
+                // define operation here
+                
+                ++lp;
+            }
+            if (rp&1){
+                --rp;
+                //define operation here
+
+            }
+            lp>>=1; rp>>=1;
+        }
+        return ret;
+    }
 };
 
 
