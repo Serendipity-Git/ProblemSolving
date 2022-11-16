@@ -31,6 +31,53 @@ vector<ll> primegen(ll N) {
     return ret;
 }
 
+// Miller_Rabin prime test O(logn*logn)
+// int32 , int64 version
+// check if n is prime number 
+// require power function
+bool miller32(ull n){
+    vector<ull> A = {2,7,61};
+    if (n==2 || n==7 || n==61){return true;}
+    if (n%2==0 || n%7==0 || n%61==0){return false;}
+
+    for (int j=0;j<3;j++){
+        bool isprime=false;
+        ull tmp = (n-1)/2;
+        while(tmp%2==0){
+            if (power(A[j],tmp,n)==n-1){isprime=true; break;}
+            tmp>>=1;
+        }
+        ull x = power(A[j],tmp,n);
+        if (x==n-1 || x==1){isprime=true;}
+
+        if (!isprime){return false;}
+    }
+    return true;
+};
+bool miller64(ull n){
+    vector<ull> A = {2,3,5,7,11,13,17,19,23,29,31,37,41};
+    if (n<=41){
+        for (auto& it:A){
+            if (it==n){return true;}
+        }
+        return false;
+    }
+    if (n%2==0){return false;}
+
+    for (int j=0;j<13;j++){
+        bool isprime=false;
+        ull tmp = (n-1)/2;
+        while(tmp%2==0){
+            if (power(A[j],tmp,n)==n-1){isprime=true; break;}
+            tmp>>=1;
+        }
+        ull x = power(A[j],tmp,n);
+        if (x==n-1 || x==1){isprime=true;}
+
+        if (!isprime){return false;}
+    }
+    return true;
+};
 
 // Mobius Function Linear Sieve O(n)
 vector<ll> prime;
@@ -278,28 +325,4 @@ ll BSGS(ll x, ll y, ll MOD){
         }
     }
     return -1;
-}
-
-// Binary search
-int lower_bound(int n){
-	int lo, hi, mid;
-    lo = 0; hi = N - 1;
-    while (lo < hi) {
-        mid = (lo + hi) / 2;
-        if (a[mid]) >= n) { hi = mid; }
-        else { lo = mid + 1; }
-    }
-	if (a[lo]==n){return n;}
-	else{return -1;}
-}
-int upper_bound(int n){
-	int lo, hi, mid;
-    lo = 0; hi = N - 1;
-    while (lo < hi) {
-        mid = (lo + hi + 1) / 2;
-        if (a[mid]) <= n) { lo = mid; }
-        else { hi = mid - 1; }
-    }
-	if (a[lo]==n){return n;}
-	else{return -1;}
 }
