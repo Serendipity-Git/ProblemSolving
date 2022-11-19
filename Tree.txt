@@ -1,123 +1,53 @@
-// 0-based 사용했다
-// init(x) : x를 루트로 하는 rooted tree 만들어준다
-// lca(u,v) : u와 v의 lca를 찾아준다. O(logn)
-// dist(u,v) : u와 v의 거리를 찾아준다. O(logn)
+// 0-based
+// 기본적으로 weighted이다. (default w=1)
+// init(root)로 root를 고정시킨다.
+// setLCA() 이후 lca 관련 함수를 사용할 수 있다. (lca,dist)
+// setHLD() 이후 hld 관련 함수를 사용할 수 있다. (update,query)
+// HLD를 사용하려면 segment 관련 DS를 먼저 설정해야 한다.
 
 struct Tree{
-    int N,M;
-    vector<vector<int>> adj;
-    vector<vector<int>> C;
+    int N=0,M=0,r=0;
+    vector<int> h,par,heavy,head,pos;
     vector<vector<int>> sps;
-    vector<int> H,P;
-
-    Tree(){N=M=0;}
-    Tree(int n){
-        N=n; M=0;
-        adj.resize(N);
-        C.resize(N);
-        H.resize(N);
-        P.resize(N);
-        int tmp=1;
-        while(tmp<N){tmp<<=1;++M;}
-        sps.resize(M);
-        for (int j=0;j<M;j++){sps[j].resize(N);}
-        for (int i=0;i<N;i++){H[i]=-1;}
-    }
-
-    void add(int a, int b){
-        adj[a].push_back(b);
-        adj[b].push_back(a);
-    }
-
-    void init(int root){
-        H[root]=0;
-        dfs(root);
-
-        for (int j=1;j<M;j++){
-            for (int i=0;i<N;i++){
-                sps[j][i] = sps[j-1][sps[j-1][i]];
-            }
-        }
-    }
-
-    void dfs(int n){
-        for (auto& it:adj[n]){
-            if (H[it]==-1){
-                C[n].push_back(it);
-                P[it]=n;
-                H[it]=H[n]+1;
-                sps[0][it]=n;
-                dfs(it);
-            }
-        }
-    }
-
-    int lca(int u, int v){
-        if (H[u]>H[v]){swap(u,v);}
-        int d = H[v]-H[u];
-        if (d>0){
-            for (int j=M-1;j>=0;j--){
-                if (d>=(1<<j)){
-                    d-=(1<<j);
-                    v = sps[j][v];
-                }
-            }
-        }
-
-        if (u==v){return u;}
-        for (int j=M-1;j>=0;j--){
-            if (sps[j][u]!=sps[j][v]){
-                u = sps[j][u];
-                v = sps[j][v];
-            }
-        }
-        return sps[0][u];
-    }
-
-    int dist(int u , int v){
-        int p = lca(u,v);
-        return H[u]+H[v]-2*H[p];
-    }
-
-};
-
-
-// 0-based 사용했다
-// dist(u,v) : u와 v의 weighted한 거리를 찾아준다. O(logn)
-struct Weighted_Tree{
-    int N,M;
-    vector<vector<pii>> adj;
-    vector<vector<pii>> C;
-    vector<vector<int>> sps;
+    vector<vector<pii>> g,c;
+    vector<ll> d;
     vector<vector<ll>> dsps;
-    vector<int> H,P;
-    vector<ll> D;
+    maxseg seg;
 
-    Weighted_Tree(){N=M=0;}
-    Weighted_Tree(int n){
-        N=n; M=0;
-        adj.resize(N);
-        C.resize(N);
-        H.resize(N);
-        P.resize(N);
-        D.resize(N);
+    Tree(){}
+    Tree(int N): N(N){
+        g.resize(N);
+        c.resize(N);
+        h.resize(N);
+        par.resize(N);
+        d.resize(N);
+    }
+    void add(int u, int v, ll w=1){
+        g[u].push_back({v,w});
+        g[v].push_back({u,w});
+    }
+    void init(int root){
+        r=root;
+        dfs(r);
+    }
+    void dfs(int u){
+        for (auto& it:g[u]){
+            if (it.first==par[u]){continue;}
+            ll v,w; v=it.first; w=it.second;
+            c[u].push_back({v,w});
+            par[v]=u;
+            h[v]=h[u]+1;
+            d[v]=d[u]+w;
+            dfs(v);
+        }
+    }
+
+    void setLCA(){
         int tmp=1;
         while(tmp<N){tmp<<=1;++M;}
-        sps.resize(M);
-        dsps.resize(M);
-        for (int j=0;j<M;j++){sps[j].resize(N);dsps[j].resize(N);}
-        for (int i=0;i<N;i++){H[i]=-1;}
-    }
-
-    void add(int a, int b, int w){
-        adj[a].push_back({b,w});
-        adj[b].push_back({a,w});
-    }
-
-    void init(int root){
-        H[root]=0; D[root]=0;
-        dfs(root);
-
+        sps.resize(M); dsps.resize(M);
+        for (int j=0;j<M;j++){sps[j].resize(N); dsps[j].resize(N);}
+        for (int i=0;i<N;i++){sps[0][i]=par[i];}
         for (int j=1;j<M;j++){
             for (int i=0;i<N;i++){
                 sps[j][i] = sps[j-1][sps[j-1][i]];
@@ -125,23 +55,9 @@ struct Weighted_Tree{
             }
         }
     }
-
-    void dfs(int n){
-        for (auto& it:adj[n]){
-            if (H[it.first]==-1){
-                C[n].push_back(it);
-                P[it.first]=n;
-                H[it.first]=H[n]+1;
-                D[it.first]=D[n]+it.second;
-                sps[0][it.first]=n;
-                dfs(it.first);
-            }
-        }
-    }
-
     int lca(int u, int v){
-        if (H[u]>H[v]){swap(u,v);}
-        int d = H[v]-H[u];
+        if (h[u]>h[v]){swap(u,v);}
+        int d = h[v]-h[u];
         if (d>0){
             for (int j=M-1;j>=0;j--){
                 if (d>=(1<<j)){
@@ -150,7 +66,6 @@ struct Weighted_Tree{
                 }
             }
         }
-
         if (u==v){return u;}
         for (int j=M-1;j>=0;j--){
             if (sps[j][u]!=sps[j][v]){
@@ -160,10 +75,68 @@ struct Weighted_Tree{
         }
         return sps[0][u];
     }
-
     ll dist(int u , int v){
         int p = lca(u,v);
-        return D[u]+D[v]-2*D[p];
+        return d[u]+d[v]-2*d[p];
     }
 
+    void setHLD(){
+        heavy.resize(N,-1);
+        head.resize(N);
+        pos.resize(N);
+        seg = maxseg(N); // define DS first
+        int cnt=0;
+        function<int(int)> dfs=[&](int u){
+            int ret=1;
+            int high=0;
+            for (auto& it:c[u]){
+                if (it.first==par[u]){continue;}
+                int v,w; v=it.first; w=it.second;
+                int sz = dfs(v);
+                ret+=sz;
+                if (high<sz){high=sz; heavy[u]=v;}
+            }
+            return ret;
+        };
+        function<void(int,int)> decompose=[&](int u, int h){
+            head[u]=h; pos[u]=cnt++;
+            if (heavy[u]!=-1){decompose(heavy[u],h);}
+            for (auto& it:c[u]){
+                int v = it.first;
+                if (v==heavy[u]){continue;}
+                decompose(v,v);
+            }
+        };
+        dfs(r);
+        decompose(r,r);
+
+        // define segment operation here
+        for (int j=0;j<N;j++){
+            for (auto& it:c[j]){
+                int v,w; v=it.first; w=it.second;
+                seg.a[pos[v]] = w;
+            }
+        }
+        seg.init();
+    }
+    void update(int u, ll x){
+        seg.update(pos[u],x);
+    }
+    ll query(int u, int v){
+        ll ret=0;
+        int p = lca(u,v);
+
+        // define segment operation here
+        while(head[p]!=head[v]){
+            ret = max(ret,seg.query(pos[head[v]], pos[v]));
+            v = par[head[v]];
+        }
+        ret = max(ret,seg.query(pos[p]+1, pos[v]));
+        while(head[p]!=head[u]){
+            ret = max(ret, seg.query(pos[head[u]], pos[u]));
+            u = par[head[u]];
+        }
+        ret = max(ret,seg.query(pos[p]+1, pos[u]));
+        return ret;
+    }
 };
