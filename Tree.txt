@@ -124,19 +124,13 @@ struct Tree{
     }
     ll query(int u, int v){
         ll ret=0;
-        int p = lca(u,v);
-
-        // define segment operation here
-        while(head[p]!=head[v]){
-            ret = max(ret,seg.query(pos[head[v]], pos[v]));
+        while(head[u]!=head[v]){
+            if (h[head[u]]>h[head[v]]){swap(u,v);}
+            ret = max(ret,seg.query(pos[head[v]],pos[v]));
             v = par[head[v]];
         }
-        ret = max(ret,seg.query(pos[p]+1, pos[v]));
-        while(head[p]!=head[u]){
-            ret = max(ret, seg.query(pos[head[u]], pos[u]));
-            u = par[head[u]];
-        }
-        ret = max(ret,seg.query(pos[p]+1, pos[u]));
+        if (h[u]>h[v]){swap(u,v);}
+        ret = max(ret,seg.query(pos[u]+1,pos[v]));
         return ret;
     }
 };
