@@ -256,17 +256,26 @@ for (int j=1;j<=N;j++){ // j는 차이
 
 // Divide and Conquer optimization 
 // O(KN^2) -> O(KNlogN)
-// DP(t,i) = min DP(t-1,j) + c(j,i) (j<i) 인 점화식에 사용
+// DP(t,i) = min DP(t-1,j-1) + c(j,i) (j<=i) 인 점화식에 사용
 
 t번째 row를 채울때, opt(i)는 DP(t,i)를 최소로 만드는
-j값이라고 하자. opt(i)의 경향이 단조적이면
-DNC Optimization이 가능하다.
+j값이라고 하자. opt(i)의 경향이 단조적이면 DNC Optimization이 가능하다.
 
-만약 c(a,b)가 monge array라면 opt(i)는 단조적이다.
-monge array: c(a,c)+c(b,d) <= c(a,d) + c(b,c)(a<=b<=c<=d)
+c(j,i)가 사각부등식을 만족시키면 opt(i)는 단조적이다. c(a,c) + c(b,d) <= c(a,d) + c(b,c) (a<b<c<d)
+또는 직접 opt(i)의 단조성을 얻어서 사용할 수도 있음
 
-t번째 row를 채울때, mid를 먼저 O(N)으로 구하고
-s~mid-1, mid+1~e를 재귀적으로 채우면 NlogN으로 한 row를
-구할 수 있다.
+t번째 row를 채우는 순서를 바꾼다고 생각하면 쉽다.
 
-그러므로 overall -> K*NlogN이다.
+하나의 row 채우는 코드
+function<void(int,int,int,int)> calc=[&](int l, int r, int optl, int optr){
+    if (l>r){return;}
+    int mid = (l+r)>>1;
+    pair<ll,int> ret = {LLINF,-1};
+    for (int i=optl;i<=min(mid,optr);i++){
+        ret = min(ret,{dp[i-1]+c(i,mid),i});
+    }
+    new_dp[mid] = ret.first;
+    int opt = ret.second;
+    calc(l,mid-1,optl,opt);
+    calc(mid+1,r,opt,optr);
+};
