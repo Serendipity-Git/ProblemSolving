@@ -326,3 +326,22 @@ ll BSGS(ll x, ll y, ll MOD){
     }
     return -1;
 }
+
+
+// bitset (0-based)
+struct bitset{
+    - bit::bit<sz> st : sz짜리 bitset 초기화
+    - bit::size() : size 구함
+    - bit::set() : 모두 1로 세팅
+    - bit::reset() : 모두 0으로 세팅
+    - bit::set(x, true/false) : x원소를 0/1로 설정
+    - bit::any() : 하나라도 1이면 true, 모두 0이면 false
+    - bit::none() : 하나라도 1이면 false, 모두 0이면 true
+    - bit::flip() : 셋 내부 모두 반전
+    - bit::flip(x) : x번째 원소 반전
+    - bit::test(x) : x번째 원소 0인지 1인지
+    - bit::test[4], bit[4] : 배열처럼 접근 가능
+    - bit::to_string() : 비트를 스트링화 시킨다
+    - bit::to_ulong(), bit::to_ullong() : 비트를 ul/ull 타입으로 리턴함
+}
+
