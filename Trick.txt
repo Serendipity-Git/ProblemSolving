@@ -227,46 +227,43 @@ struct maxhull{
 
 // Knuth optimization
 // O(N^3) -> O(N^2)
-// 구간을 쪼개어가는 DP를 최적화한다
+// dp(j,i) = min(dp(j,k) + dp(k+1,i)) + c(j,i) (Range DP를 최적화한다)
 
-1. DP[i][j]가 1<=i<=j<=n일때만 정의된다.
-2. DP[i][j] = min(DP[i][k] + DP[k][j]) + cost[i][j]
-a<=b<=c<=d 일때,
-3. cost[a][c] + cost[b][d] <= cost[a][d] + cost[b][c]
-4. cost[b][c] <= cost[a][d]
+opt(j,i)는 dp(j,i)를 최적화하는 k값이라고 하자
 
-라면 Knuth optimization을 이용할 수 있다.
+1. opt(j,i-1) <= opt(j,i) <= opt(j+1,i) 이면 사용 가능
 
-3번과 4번을 만족한다면, P[i][j]를 DP[i][j] 문제에서
-최소로 만드는 k의 값이라고 정의할 때,
+2. c(j,i)가 아래 조건을 만족하면 opt가 조건을 만족시킴 (a<b<c<d)
+- c(b,c) <= c(a,d) (단조성)
+- c(a,c) + c(b,d) <= c(a,d) + c(b,c) (사각부등식)
 
-P[i][j-1] <= P[i][j] <= P[i+1][j]를 만족한다. (i<j)
--> k값을 찾는데 범위를 줄여줌
--> P[a][b]라고 하면 b-a가 커지는 순서로 루프를 돌려야함
-
-for (int j=1;j<=N;j++){ // j는 차이
-    for (int i=0;i+j<=N;i++){ // i는 시작 index
-        for (int k=key[i][i+j-1];k<=key[i+1][i+j];k++){
-            // k는 다음 최소값의 후보군이다.
+// dp table 채우는 코드
+for (int j=N-1;j>=0;j--){
+    for (int i=j+1;i<N;i++){
+        pair<ll,int> ret = {LLINF,-1};
+        for (int k=opt[j][i-1]; k<=min(opt[j+1][i],i-1);k++){
+            ret = min(ret,{dp[j][k] + dp[k+1][i] + c(j,i),k});
         }
+        dp[j][i] = ret.first;
+        opt[j][i] = ret.second;
     }
 }
 
 
-
 // Divide and Conquer optimization 
 // O(KN^2) -> O(KNlogN)
-// DP(t,i) = min DP(t-1,j-1) + c(j,i) (j<=i) 인 점화식에 사용
+// dp(k,i) = min dp(k-1,j-1) + c(j,i) (k-partition dp)
 
-t번째 row를 채울때, opt(i)는 DP(t,i)를 최소로 만드는
-j값이라고 하자. opt(i)의 경향이 단조적이면 DNC Optimization이 가능하다.
+k번째 row를 채울때, opt(i)는 dp(k,i)를 최적화하는 j값이라고 하자
 
-c(j,i)가 사각부등식을 만족시키면 opt(i)는 단조적이다. c(a,c) + c(b,d) <= c(a,d) + c(b,c) (a<b<c<d)
-또는 직접 opt(i)의 단조성을 얻어서 사용할 수도 있음
+1. opt(i) <= opt(i+1)이면 DNC Optimization이 가능하다.
 
-t번째 row를 채우는 순서를 바꾼다고 생각하면 쉽다.
+2. c(j,i)가 아래 조건을 만족하면 opt가 조건을 만족시킴 (a<b<c<d)
+- c(a,c) + c(b,d) <= c(a,d) + c(b,c) (사각부등식)
 
-하나의 row 채우는 코드
+k번째 row를 채우는 순서를 바꾼다고 생각하면 쉽다.
+
+// 하나의 row 채우는 코드
 function<void(int,int,int,int)> calc=[&](int l, int r, int optl, int optr){
     if (l>r){return;}
     int mid = (l+r)>>1;
