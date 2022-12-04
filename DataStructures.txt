@@ -707,6 +707,59 @@ struct lazy_xorseg {
 };
 
 
+// Maximum Subarray segtree (0-based)
+// 금광 세그
+struct arrseg{
+    struct arr{
+        ll l,r,s,v;
+        arr(){l=r=v=-LLINF; s=0;}
+        arr(ll l, ll r, ll s, ll v):l(l),r(r),s(s),v(v){}
+    };
+    int N;
+    vector<ll> a;
+    vector<arr> seg;
+    
+    arrseg(){N=0;}
+    arrseg(int N):N(N){
+        a.resize(4*N);
+        seg.resize(4*N);
+    }
+    void update(int l, int r, int i, ll val, int node){
+        if (l==r){
+            a[i] = val;
+            seg[node] = {val,val,val,val};
+            return;
+        }
+        int mid = (l+r)>>1;
+        if (i<=mid){update(l,mid,i,val,node*2);}
+        else{update(mid+1,r,i,val,node*2+1);}
+        arr& a1 = seg[node*2];
+        arr& a2 = seg[node*2+1];
+        ll nl,nr,ns,nv;
+        nl = max(a1.l, a1.s+a2.l);
+        nr = max(a2.r, a2.s+a1.r);
+        ns = a1.s+a2.s;
+        nv = max({a1.v, a2.v, a1.r+a2.l});
+        seg[node] = {nl,nr,ns,nv};
+    }
+    arr query(int l, int r, int from, int to, int node){
+        if (to<l || r<from){return arr();}
+        if (from<= l && r<=to){return seg[node];}
+        int mid = (l+r)>>1;
+        arr a1 = query(l,mid,from,to,node*2);
+        arr a2 = query(mid+1,r,from,to,node*2+1);
+        ll nl,nr,ns,nv;
+        nl = max(a1.l, a1.s+a2.l);
+        nr = max(a2.r, a2.s+a1.r);
+        ns = a1.s+a2.s;
+        nv = max({a1.v, a2.v, a1.r+a2.l});
+        return {nl,nr,ns,nv};
+    }
+    void update(int i, ll val){update(0,N-1,i,val,1);}
+    arr query(int from, int to){return query(0,N-1,from,to,1);}
+};
+
+
 // Merge Sort Tree (0-based)
 // 구간 update는 없다
 // 각 노드에 정렬된 상태의 배열을 가지고 있다. (Space : NlogN)
