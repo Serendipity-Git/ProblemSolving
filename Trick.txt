@@ -47,87 +47,29 @@ struct FFT{
 };
 
 
-// Convex hull trick
-DP[i] = max(M[j]*X[i] + N[j]) + C[i] (j<i)
-로 주어질 때, 사용 가능하다.
+// Convex hull trick (Monotone slope)
+// dp(i) = min(M(j)*X(i) + N(j)) + C(i) (쪼개는 dp 최적화)
+// 처리하는 M(j)가 monotone한 경우의 CHT이다.
 
-// special case for CHT
-// add로 주어지는 직선의 M이 증가할때
-// query로 주어지는 X가 증가할때
-// special하게 O(N)에 작동
-struct line {
-    ll m, n; ld from;
-    line(){m=n=0; from=-1.0*INF;}
-    line(ll _m, ll _n) : m(_m), n(_n), from(-INF) {}
-    ld cross(const line& other) {
-        return 1.0 * (other.n - n) / (m - other.m);
+// line 관리에 O(N)
+// query를 처리할때 보통은 O(QlogN), X(i)가 monotone하다면 O(Q)까지도 가능하다
+struct linear{
+    ll m,n;
+    ld s;
+    linear(){;}
+    linear(ll _m, ll _n, ld _s):m(_m),n(_n),s(_s){}
+    ll val(ll x){return m*x+n;}
+    ld intersect(const linear& l){
+        return (ld)(l.n-n)/(m-l.m);
     }
 };
-struct maxhull{
-    int N,lo;
-    vector<line> hull;
-    
-    maxhull(){N=lo=0;}
-    maxhull(int n){
-        N=n; lo=0;
-        hull.reserve(N);
-    }
-    void add(ll m, ll n){
-        line newline = line(m,n);
-        while (!hull.empty()) {
-            line top = hull.back();
-            if (top.from < newline.cross(top)) {
-                newline.from = newline.cross(top);
-                break;
-            }
-            hull.pop_back();
-            if (lo == hull.size()) { --lo; }
-        }
-        hull.push_back(newline);       
-    }
-    ll query(ll x){
-        while(lo+1<hull.size() && hull[lo+1].from < x){++lo;}
-        ll ret = hull[lo].m * x + hull[lo].n;
-        return ret;    
-    }
-};
-
-struct line {
-    ll m, n; ld from;
-    line(){m=n=0; from=-1.0*INF;}
-    line(ll _m, ll _n) : m(_m), n(_n), from(-INF) {}
-    ld cross(const line& other) {
-        return 1.0 * (other.n - n) / (m - other.m);
-    }
-};
-struct minhull{
-    int N,lo;
-    vector<line> hull;
-    
-    minhull(){N=lo=0;}
-    minhull(int n){
-        N=n; lo=0;
-        hull.reserve(N);
-    }
-    void add(ll m, ll n){
-        line newline = line(-m,-n);
-        while (!hull.empty()) {
-            line top = hull.back();
-            if (top.from < newline.cross(top)) {
-                newline.from = newline.cross(top);
-                break;
-            }
-            hull.pop_back();
-            if (lo == hull.size()) { --lo; }
-        }
-        hull.push_back(newline);       
-    }
-    ll query(ll x){
-        while(lo+1<hull.size() && hull[lo+1].from < x){++lo;}
-        ll ret = hull[lo].m * x + hull[lo].n;
-        return -ret;    
-    }
-};
+// Line add Code
+void add(){
+    linear new_l = linear(M(j), N(j),-LLINF);
+    while(line.size()>0 && line.back().intersect(new_l)<=line.back().s){line.pop_back();}
+    new_l.s = line.back().intersect(new_l);
+    line.push_back(new_l);
+}
 
 
 // Convex hull Trick (Online)
