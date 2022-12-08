@@ -32,14 +32,14 @@ struct segment{
         else{return x1<v.x1;}
     }
     bool parallel (const segment& v){
-        vec v1,v2;
+        vec<T> v1,v2;
         v1 = vec(x2-x1, y2-y1);
         v2 = vec(v.x2-v.x1, v.y2-v.y1);
         if (v1.cross(v2)==0){return true;}
         else{return false;}
     }
     bool meet(const segment& v){
-        vec v1,v2,v3,v4,v5,v6;
+        vec<T> v1,v2,v3,v4,v5,v6;
         v1=vec(v.x1-x1,v.y1-y1);
         v2=vec(x2-x1,y2-y1);
         v3=vec(v.x2-x1,v.y2-y1);
