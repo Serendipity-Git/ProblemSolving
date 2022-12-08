@@ -16,6 +16,7 @@ using namespace std;
 typedef long long ll;
 typedef unsigned long ul;
 typedef unsigned long long ull;
+typedef __int128 ll128;
 typedef long double ld;
 typedef pair<int, int> pi;
 typedef pair<ll, ll> pii;
