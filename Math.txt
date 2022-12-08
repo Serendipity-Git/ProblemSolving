@@ -1,83 +1,109 @@
 ///////////////////
 /* Number Theory */
 
-// Prime operations
-// Sieve of Erathosthenes O(nlogn)
-vector<ll> prime;
-void PrimeGenerator(ll N) {
-    bool isprime[MAX + 1];
-    memset(isprime, true, sizeof(isprime));
-    for (ll j = 2; j <= N; j++) {
-        if (isprime[j]) { 
-            prime.push_back(j); 
-            for (ll i = j * j; i <= N; i += j) {
-                isprime[i] = false;
-            }
-        }
-    }
-}
 
 // Linear Sieve O(n)
-vector<ll> primegen(ll N) {
-    vector<bool> isprime(N+1,1);
-    vector<ll> ret;
-    for (ll j = 2; j <= N; j++) {
-        if (isprime[j]) { ret.push_back(j); }
-        for (ll i = 0; i < ret.size() && j * ret[i] <= N; ++i) {
-            isprime[j * ret[i]] = false;
-            if (j % ret[i] == 0) break;
+namespace sieve{
+    vector<ll> gen(ll N){
+        vector<bool> isprime(N+1,1);
+        vector<ll> ret;
+        for (ll j = 2; j <= N; j++) {
+            if (isprime[j]) { ret.push_back(j); }
+            for (ll i = 0; i < ret.size() && j * ret[i] <= N; ++i) {
+                isprime[j * ret[i]] = false;
+                if (j % ret[i] == 0) break;
+            }
         }
+        return ret;
     }
-    return ret;
 }
 
 // Miller_Rabin prime test O(logn*logn)
-// int32 , int64 version
+// check32(int) check64(ll)
 // check if n is prime number 
-// require power function
-bool miller32(ull n){
-    vector<ull> A = {2,7,61};
-    if (n==2 || n==7 || n==61){return true;}
-    if (n%2==0 || n%7==0 || n%61==0){return false;}
+namespace miller_rabin{
+    bool check32(ll n){
+        vector<int> A = {2,7,61};
+        if (n==2 || n==7 || n==61){return true;}
+        if (n%2==0 || n%7==0 || n%61==0){return false;}
 
-    for (int j=0;j<3;j++){
-        bool isprime=false;
-        ull tmp = (n-1)/2;
-        while(tmp%2==0){
-            if (power(A[j],tmp,n)==n-1){isprime=true; break;}
-            tmp>>=1;
+        for (int j=0;j<3;j++){
+            bool isprime=false;
+            ll tmp = (n-1)/2;
+            while(tmp%2==0){
+                if (power(A[j],tmp,n)==n-1){isprime=true; break;}
+                tmp>>=1;
+            }
+            ll x = power(A[j],tmp,n);
+            if (x==n-1 || x==1){isprime=true;}
+
+            if (!isprime){return false;}
         }
-        ull x = power(A[j],tmp,n);
-        if (x==n-1 || x==1){isprime=true;}
-
-        if (!isprime){return false;}
+        return true;
     }
-    return true;
-};
-bool miller64(ull n){
-    vector<ull> A = {2,3,5,7,11,13,17,19,23,29,31,37,41};
-    if (n<=41){
-        for (auto& it:A){
-            if (it==n){return true;}
+    bool check64(ll n){
+        vector<ll> A = {2,3,5,7,11,13,17,19,23,29,31,37,41};
+        if (n<=41){
+            for (auto& it:A){
+                if (it==n){return true;}
+            }
+            return false;
         }
-        return false;
-    }
-    if (n%2==0){return false;}
+        if (n%2==0){return false;}
 
-    for (int j=0;j<13;j++){
-        bool isprime=false;
-        ull tmp = (n-1)/2;
-        while(tmp%2==0){
-            if (power(A[j],tmp,n)==n-1){isprime=true; break;}
-            tmp>>=1;
+        for (int j=0;j<13;j++){
+            bool isprime=false;
+            ll tmp = (n-1)/2;
+            while(tmp%2==0){
+                if (power(A[j],tmp,n)==n-1){isprime=true; break;}
+                tmp>>=1;
+            }
+            ll x = power(A[j],tmp,n);
+            if (x==n-1 || x==1){isprime=true;}
+
+            if (!isprime){return false;}
         }
-        ull x = power(A[j],tmp,n);
-        if (x==n-1 || x==1){isprime=true;}
+        return true;
+    };
+}
 
-        if (!isprime){return false;}
+// Pollard Rho Factorize O(N^1/4)
+// factorize(ll)
+namespace pollard_rho{
+    void cal(ll n, vector<ll>& v){
+        if (n==1){return;}
+        if (miller_rabin::check64(n)){v.push_back(n); return;}
+        if (n%2==0){
+            v.push_back(2);
+            cal(n/2,v);
+            return;
+        }
+        ll a,b,c,g=n;
+        function<ll(ll)> f=[&](ll x){
+            return ((ll128)x*x+c)%n;
+        };
+        while(true){
+            if (g==n){
+                a = b = rand()%(n-2)+2;
+                c = rand()%20 + 1;
+            }
+            a = f(a);
+            b = f(f(b));
+            g = gcd(abs(a-b),n);
+            if (1<g && g<n){break;}
+        }
+        cal(g,v);
+        cal(n/g,v);
     }
-    return true;
-};
+
+    vector<ll> factorize(ll n){
+        vector<ll> ret;
+        cal(n,ret);
+        sort(ret.begin(),ret.end());
+        return ret;
+    }
+}
+
 
 // Mobius Function Linear Sieve O(n)
 vector<ll> prime;
@@ -294,10 +320,10 @@ __builtin_ctz(x) = 2 : x에서 마지막 1 뒤의 0 세줌
 // power(X,Y,MOD) O(logY)
 ll power(ll x, ll y, ll MOD) {
     if (y == 0) { return 1; }
-    if (y % 2) { return power(x, y - 1, MOD) * x % MOD; }
+    if (y % 2) { return (ll128)power(x, y - 1, MOD) * x % MOD; }
     else {
         ll ret = power(x, y / 2, MOD);
-        ret *= ret; ret %= MOD;
+        ret = (ll128)ret*ret%MOD;
         return ret;
     }
 }
