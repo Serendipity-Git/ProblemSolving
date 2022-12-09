@@ -86,42 +86,35 @@ struct suffixarr {
 
 // KMP Algorithm (하나의 text에서 하나의 pattern 찾을때)
 // O(text + pattern)
-struct KMP{
-    string P;
-    int pl;
-    vector<int> fail;
-
-    KMP(){pl=0;}
-    KMP(string p){
-        P=p; pl = P.length();
-        fail.resize(pl+1);
-        setfail();
-    }
-    void setfail() {
-        fail[0] = 0;
-        int i = 1, j = 0;
-
-        while (i < pl) {
-            while (j > 0 && P[i] != P[j]) { j = fail[j]; }
-            if (P[i] == P[j]) { fail[++i] = ++j;}
-            else { ++i; j = 0; }
+namespace KMP{
+    template<typename T>
+    vector<int> getfail(const vector<T>& A){
+        int N = A.size();
+        vector<int> fail(N);
+        fail[0]=0;
+        for (int i=1;i<N;i++){
+            int j = fail[i-1];
+            while(j>0 && A[j]!=A[i]){j=fail[j-1];}
+            if (A[j]==A[i]){fail[i]=j+1;}
         }
+        return fail;
     }
-    vector<int> query(string T){
-        vector<int> ans;
-        int tl = T.length();
-        int i = 0, j = 0;
-        while (i < tl) {
-            while (j > 0 && T[i] != P[j]) { j = fail[j]; }
-            if (T[i] == P[j]) { 
-                ++j; ++i; 
-                if (j == pl) { ans.push_back(i - pl); j = fail[j]; }
-            }
-            else { ++i; j = 0; }
+
+    vector<int> match(const vector<int>& text, const vector<int>& pattern){
+        vector<int> ret;
+        int N,M; N = text.size(); M = pattern.size();
+        if (N<M){return ret;}
+        vector<int> temp(N+M+1);
+        for (int i=0;i<M;i++){temp[i]=pattern[i];}
+        temp[M]=-1;
+        for (int i=0;i<N;i++){temp[M+1+i]=text[i];}
+        vector<int> fail = getfail(temp);
+        for (int i=M+1;i<=M+N;i++){
+            if (fail[i]==M){ret.push_back(i-2*M);}
         }
-        return ans;
+        return ret;
     }
-};
+}
 
 // Trie (여러개의 단어에서 여러개의 단어를 찾을때)
 // O(sum pattern + sum query)
