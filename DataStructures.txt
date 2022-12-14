@@ -806,6 +806,88 @@ struct mergetree{
 };
 
 
+// Persistence Segment Tree (0-based)
+// head[k]에 k번째 수정본의 루트가 저장되어 있음
+// operation을 정의해 사용한다.
+// Space : O(N + Q*logN)
+// Time : O(logN)
+
+struct pst{
+    struct node{
+        int l,r; ll v;
+        node(){l=r=-1; v=0;}
+        node(int l, int r, ll v):l(l),r(r),v(v){;}
+    };
+
+    int sz,N;
+    vector<int> head;
+    vector<ll> a;
+    vector<node> seg;
+
+    // define operation first
+    pst(){sz=N=0;}
+    pst(int N):N(N){
+        sz=1;
+        a.resize(N);
+        head.push_back(0);
+        seg.push_back(node());
+    }
+    ll init(int l, int r, int cur){
+        if (l==r){seg[cur].v = a[l]; return a[l];}
+        int mid = (l+r)>>1;
+        seg.push_back(node());
+        seg.push_back(node());
+        seg[cur].l = sz;
+        seg[cur].r = sz+1;
+        sz+=2;
+        seg[cur].v = init(l,mid,seg[cur].l)+init(mid+1,r,seg[cur].r); // define operation
+        return seg[cur].v;   
+    }
+
+    void update(int i, ll inc, int cur, int prev){
+        int l,r; l=0;r=N-1;
+        while(l<r){
+            int mid = (l+r)>>1;
+            seg[cur].v = seg[prev].v + inc; // define operation
+            seg.push_back(node());
+            ++sz;
+            if (i<=mid){
+                seg[cur].l = sz-1;
+                seg[cur].r = seg[prev].r;
+                r=mid;
+                cur = seg[cur].l;
+                prev= seg[prev].l;
+            }else{
+                seg[cur].r = sz-1;
+                seg[cur].l = seg[prev].l;
+                l=mid+1;
+                cur =  seg[cur].r;
+                prev = seg[prev].r;
+            }
+        }
+        seg[cur].v = seg[prev].v+inc; // define operation
+    }
+
+    ll query(int from, int to, int l, int r, int cur){
+        if (to<l || r<from){return 0;}
+        if (from<=l && r<=to){return seg[cur].v;}
+        int mid=(l+r)>>1;
+        return query(from,to,l,mid,seg[cur].l) + query(from,to,mid+1,r,seg[cur].r); // define operation
+    };
+
+    void init(){init(0,N-1,head[0]);}
+    void update(int i, ll inc){
+        int r = head.back();
+        seg.push_back(node());
+        ++sz;
+        head.push_back(sz-1);
+        update(i,inc,sz-1,r);
+        a[i]+=inc;
+    }
+    ll query(int k, int from, int to){return query(from,to,0,N-1,head[k]);}
+};
+
+
 // Sparse Table (0-based)
 범위 [L,R]이 주어졌을 때 Function(L,L+1,...,R)을 빠르게 한다
 조건1) Array에 저장된 값이 변하면 안된다.
