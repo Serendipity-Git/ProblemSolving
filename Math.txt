@@ -4,17 +4,29 @@
 
 // Linear Sieve O(n)
 namespace sieve{
-    vector<ll> gen(ll N){
-        vector<bool> isprime(N+1,1);
-        vector<ll> ret;
-        for (ll j = 2; j <= N; j++) {
-            if (isprime[j]) { ret.push_back(j); }
-            for (ll i = 0; i < ret.size() && j * ret[i] <= N; ++i) {
-                isprime[j * ret[i]] = false;
-                if (j % ret[i] == 0) break;
+    vector<int> gen(int N){
+        vector<int> mp(N+1);
+        vector<int> pr;
+        for (int i=2;i<=N;i++){
+            if (mp[i]==0){mp[i]=i; pr.push_back(i);}
+            for (int j=0;j<pr.size() && i*pr[j]<=N; j++){
+                mp[i*pr[j]] = pr[j];
+                if (mp[i]==pr[j]){break;}
             }
         }
-        return ret;
+        return pr;
+    }
+    vector<int> get_mp(int N){
+        vector<int> mp(N+1);
+        vector<int> pr;
+        for (int i=2;i<=N;i++){
+            if (mp[i]==0){mp[i]=i; pr.push_back(i);}
+            for (int j=0;j<pr.size() && i*pr[j]<=N; j++){
+                mp[i*pr[j]] = pr[j];
+                if (mp[i]==pr[j]){break;}
+            }
+        }
+        return mp;
     }
 }
 
