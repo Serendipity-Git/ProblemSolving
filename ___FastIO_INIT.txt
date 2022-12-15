@@ -8,6 +8,7 @@ using namespace std;
 #else
 #define debug(x...)
 #endif
+// mt19937_64 rng(chrono::high_resolution_clock::now().time_since_epoch().count()); // random int64 generator
 typedef long long ll;
 typedef unsigned long ul;
 typedef unsigned long long ull;
