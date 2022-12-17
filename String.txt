@@ -84,11 +84,10 @@ struct suffixarr {
 };
 
 
-// KMP Algorithm (하나의 text에서 하나의 pattern 찾을때)
-// O(text + pattern)
+// KMP Algorithm + Z algorithm
+// linear complexity
 namespace KMP{
-    template<typename T>
-    vector<int> getfail(const vector<T>& A){
+    vector<int> getfail(const vector<int>& A){
         int N = A.size();
         vector<int> fail(N);
         fail[0]=0;
@@ -99,6 +98,17 @@ namespace KMP{
         }
         return fail;
     }
+    vector<int> getz(const vector<int>& A){
+        int N = A.size();
+        vector<int> z(N);
+        int l,r; l=r=0;
+        for (int i=1;i<N;i++){
+            if (i<=r){z[i]=min(r-i+1,z[i-l]);}
+            while(i+z[i]<N && A[z[i]]==A[i+z[i]]){++z[i];}
+            if (i+z[i]-1>r){l=i; r=i+z[i]-1;}
+        }
+        return z;
+    }
 
     vector<int> match(const vector<int>& text, const vector<int>& pattern){
         vector<int> ret;
@@ -106,7 +116,7 @@ namespace KMP{
         if (N<M){return ret;}
         vector<int> temp(N+M+1);
         for (int i=0;i<M;i++){temp[i]=pattern[i];}
-        temp[M]=-1;
+        temp[M]=-INF;
         for (int i=0;i<N;i++){temp[M+1+i]=text[i];}
         vector<int> fail = getfail(temp);
         for (int i=M+1;i<=M+N;i++){
