@@ -180,19 +180,6 @@ A가 B보다 크거나 같음을 유지하면서 2n개를 배열하는 방법이
 2. n+1개의 노드로 이루어지고 루트가 있는 트리의 개수
 
 
-// combination O(NlogMOD)
-ll combination(ll n, ll k) {
-    ll ret = 1;
-    for (ll i = 1; i <= n; i++) { ret *= i; ret %= MOD; }
-    ll fact = 1;
-    for (ll i = 1; i <= k; i++) { fact *= i; fact %= MOD; }
-    ret *= power(fact, MOD - 2); ret %= MOD;
-    fact = 1;
-    for (ll i = 1; i <= n - k; i++) { fact *= i; fact %= MOD; }
-    ret *= power(fact, MOD - 2); ret %= MOD;
-    return ret;
-}
-
 // Fibonacci Numbers O(logN)
 void FibonacciMatrix(){
     Matrix table[31];
