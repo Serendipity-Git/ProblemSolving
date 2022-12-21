@@ -1,45 +1,4 @@
-// 1-based 사용했다
-struct dijkstra{
-    int N,s;
-    vector<vector<pii>> adj;
-    vector<ll> dis;
-    vector<bool> vis;
-    priority_queue<pii> pq;
-
-    dijkstra(int N, int s):N(N),s(s){
-        adj.resize(N+1);
-        dis.resize(N+1);
-        vis.resize(N+1);
-        fill(dis.begin(),dis.end(),LLINF);
-    }
-    void addEdge(int u, int v, ll c, bool undirected=0){
-        if (undirected){
-            adj[u].emplace_back(v,c);
-            adj[v].emplace_back(u,c);
-        }else{
-            adj[u].emplace_back(v,c);
-        }
-    }
-    void query(){
-        dis[s]=0; pq.push({0,s});
-        while(!pq.empty()){
-            pii tmp = pq.top(); pq.pop();
-            if (vis[tmp.second]){continue;}
-            int u = tmp.second; vis[u]=1;
-            for (pii& e:adj[u]){
-                int v; ll w;
-                v=e.first; w=e.second;
-                if (!vis[v] && dis[v]>dis[u]+w){
-                    dis[v] = dis[u]+w;
-                    pq.push({-dis[v],v});
-                }
-            }
-        }
-    }
-};
-
-
-// 1-based 사용했다
+// 0-based
 struct SCC{
     int N,cnt,scnt;
     vector<vector<int>> adj;
@@ -50,10 +9,10 @@ struct SCC{
     SCC(int n){
         N=n;
         cnt=scnt=0;
-        adj.resize(N+1);
-        dfsn.resize(N+1);
-        scc.resize(N+1);
-        for (int i=1;i<=N;i++){
+        adj.resize(N);
+        dfsn.resize(N);
+        scc.resize(N);
+        for (int i=0;i<N;i++){
             dfsn[i]=scc[i]=-1;
         }
     }
@@ -63,7 +22,7 @@ struct SCC{
     }
 
     void init(){
-        for (int i=1;i<=N;i++){
+        for (int i=0;i<N;i++){
             if (dfsn[i]==-1){dfs(i);}
         }
     }
