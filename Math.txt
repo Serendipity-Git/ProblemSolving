@@ -30,6 +30,37 @@ namespace sieve{
     }
 }
 
+// Euler Phi
+// get : O(sqrt(N))
+// gen : O(NloglogN)
+namespace euler_phi{
+    ll get(ll n){
+        ll phi = n;
+        for (ll i=2;i*i<=n;i++){
+            if (n%i==0){
+                while(n%i==0){n/=i;}
+                phi -= phi/i;
+            }
+        }
+        if (n>1){phi-=phi/n;}
+        return phi;
+    }
+
+    vector<int> gen(int n){
+        vector<int> phi(n+1);
+        for (int i=1;i<=n;i++){phi[i]=i;}
+        for (int j=2;j<=n;j++){
+            if (phi[j]==j){
+                for (int i=j;i<=n;i+=j){
+                    phi[i]-=phi[i]/j;
+                }
+            }
+        }
+        return phi;
+    }
+}
+
+
 // Miller_Rabin prime test O(logn*logn)
 // check32(int) check64(ll)
 // check if n is prime number 
@@ -181,28 +212,14 @@ A가 B보다 크거나 같음을 유지하면서 2n개를 배열하는 방법이
 
 
 // Fibonacci Numbers O(logN)
-void FibonacciMatrix(){
-    Matrix table[31];
-    for (int k = 0; k <= 30; k++) { table[k] = Matrix(2, 2); }
-	table[0].mat[0][0] = 1; table[0].mat[0][1] = 1;
-	table[0].mat[1][0] = 1; table[0].mat[1][1] = 0;
-
-	for (int k = 1; k <= 30; k++) {
-		table[k].add(table[k - 1]);
-		table[k].mul(table[k - 1]);
-	}
-}
-ll Fibonacci(int N){
-    int cnt = 0;
-	Matrix ans(2, 2); ans.identity();
-
-	while (N) {
-		if (N % 2) { ans.mul(table[cnt]); }
-
-		N /= 2;		++cnt;
-	}
-
-    return ans.mat[0][1];
+namespace fib{
+    ll get(ll n){
+        Matrix mat = Matrix(2,2);
+        mat.mat[0]={1,1};
+        mat.mat[1]={1,0};
+        mat.pow(n-1);
+        return mat.mat[0][0];
+    }
 }
 
 
@@ -277,6 +294,38 @@ struct Matrix {
 
 	// matrix inverse not yet
 };
+
+// return basis in z2 vector set
+namespace z2_basis{
+    vector<ll> get_basis(ll d, vector<ll>& a){
+        vector<ll> basis;
+        vector<ll> mask(d);
+        function<void(ll)> insert=[&](ll x){
+            ll tx=x;
+            for (ll b=59;b>=0;b--){
+                if (tx==0){return;}
+                if (tx>>b&1){
+                    if (mask[b]==0){
+                        mask[b]=tx;
+                        basis.push_back(tx);
+                        return;
+                    }else{
+                        tx^=mask[b];
+                    }
+                }
+            }
+        };
+
+        for (int i=0;i<a.size();i++){insert(a[i]);}
+        sort(basis.rbegin(),basis.rend());
+        for (int j=1;j<basis.size();j++){
+            for (int i=0;i<j;i++){
+                if ((basis[i]^basis[j]) < basis[i]){basis[i]^=basis[j];}
+            }
+        }
+        return basis;
+    }
+}
 
 ///////////////////
 /* Discrete Math */
