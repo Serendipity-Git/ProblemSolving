@@ -1,33 +1,18 @@
 // Suffix Array
-
-struct suffixarr {
-    int N; string S;
-    vector<int> sa, c, lcp;
-
-    suffixarr() { N = 0; S = ""; }
-    suffixarr(string _s) {
-        S = _s; S.push_back('$');
-        N = S.length();
-        sa.resize(N);
-        c.resize(N);
-
-        vector<pair<int, int>> tmp(N), new_tmp(N);
-        for (int i = 0; i < N; i++) {
-            tmp[i] = { S[i],i };
+// O(nlogn)
+// get_sa(a,0) -> return suffix array
+// get_sa(a,1) -> return order
+namespace suffix_array{
+    vector<int> get_sa(const vector<int>& A, bool order=false){
+        vector<int> a = A;
+        a.push_back(-1);
+        int N = a.size();
+        vector<int> sa(N),c(N);
+        vector<pi> tmp(N),new_tmp(N);
+        for (int i=0;i<N;i++){
+            tmp[i]={a[i],i};
         }
-        vector<int> cnt(300), p(300);
-        for (int i = 0; i < N; i++) {
-            cnt[S[i]]++;
-        }
-        for (int i = 1; i < 300; i++) {
-            p[i] = p[i - 1] + cnt[i - 1];
-        }
-        for (int i = 0; i < N; i++) {
-            new_tmp[p[S[i]]] = tmp[i];
-            p[S[i]]++;
-        }
-        swap(tmp, new_tmp);
-
+        sort(tmp.begin(),tmp.end());
         for (int i = 0; i < N; i++) {
             sa[i] = tmp[i].second;
         }
@@ -70,18 +55,29 @@ struct suffixarr {
                 }
             }
             if (c[sa[N - 1]] == N - 1) { break; }
-        }
+        } 
+        if (order){return c;}
+        else{return sa;}
+    }
 
-        lcp.resize(N);
+    vector<int> get_lcp(const vector<int>& A){
+        vector<int> sa = get_sa(A);
+        vector<int> c = get_sa(A,1);
+        vector<int> a = A;
+        a.push_back(-1);
+        int N = a.size();
+        vector<int> lcp(N);
+
         int d = 0;
         for (int j = 0; j < N - 1; j++) {
             int x = c[j]; int i = sa[x - 1];
-            while (S[j + d] == S[i + d]) { ++d; }
+            while (a[j + d] == a[i + d]) { ++d; }
             lcp[x] = d;
             d = max(d - 1, 0);
         }
+        return lcp;
     }
-};
+}
 
 
 // KMP Algorithm + Z algorithm
