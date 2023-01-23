@@ -49,10 +49,8 @@ struct FFT{
 
 // Convex hull trick (Monotone slope)
 // dp(i) = min(M(j)*X(i) + N(j)) + C(i) (쪼개는 dp 최적화)
-// 처리하는 M(j)가 monotone한 경우의 CHT이다.
+// 처리하는 M(j),X(i)가 monotone한 경우의 CHT이다.
 
-// line 관리에 O(N)
-// query를 처리할때 보통은 O(QlogN), X(i)가 monotone하다면 O(Q)까지도 가능하다
 struct linear{
     ll m,n;
     ld s;
@@ -63,14 +61,66 @@ struct linear{
         return (ld)(l.n-n)/(m-l.m);
     }
 };
-// Line add Code
-void add(){
-    linear new_l = linear(M(j), N(j),-LLINF);
-    while(line.size()>0 && line.back().intersect(new_l)<=line.back().s){line.pop_back();}
-    new_l.s = line.back().intersect(new_l);
-    line.push_back(new_l);
-}
-
+struct maxhull{
+    int r=0;
+    vector<linear> line;
+    maxhull(){r=0;}
+    void add(ll m, ll n){
+        if (line.empty()){
+            line.push_back({m,n,-LLINF});
+        }else{
+            bool push=true;
+            linear new_l = linear(m, n,-LLINF);
+            while(line.size()>0){
+                if (line.back().m==new_l.m){
+                    if (line.back().n<new_l.n){line.pop_back();}
+                    else{return;}
+                }else{
+                    if (line.back().intersect(new_l)<=line.back().s){line.pop_back();}
+                    else{break;}
+                }
+            }
+            if (line.empty()){new_l.s = -LLINF;}
+            else{new_l.s = line.back().intersect(new_l);}
+            line.push_back(new_l);
+        }
+    }
+    ll query(ll x){
+        r=min(r,(int)line.size()-1);
+        while(r+1<line.size() && line[r+1].s<=x){++r;}
+        return line[r].val(x);
+    }
+};
+struct minhull{
+    int r=0;
+    vector<linear> line;
+    minhull(){r=0;}
+    void add(ll m, ll n){
+        if (line.empty()){
+            line.push_back({m,n,-LLINF});
+        }else{
+            bool push=true;
+            linear new_l = linear(m, n,-LLINF);
+            while(line.size()>0){
+                if (line.back().m==new_l.m){
+                    if (line.back().n>new_l.n){line.pop_back();}
+                    else{return;}
+                }else{
+                    if (line.back().intersect(new_l)<=line.back().s){line.pop_back();}
+                    else{break;}
+                }
+            }
+            if (line.empty()){new_l.s = -LLINF;}
+            else{new_l.s = line.back().intersect(new_l);}
+            line.push_back(new_l);
+        }
+    }
+    ll query(ll x){
+        r=min(r,(int)line.size()-1);
+        while(r+1<line.size() && line[r+1].s<=x){++r;}
+        return line[r].val(x);
+    }
+};
 
 // Convex hull Trick (Online)
 // Online CHT O(nlogn)
