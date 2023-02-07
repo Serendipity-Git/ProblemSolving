@@ -60,7 +60,6 @@ namespace euler_phi{
     }
 }
 
-
 // Miller_Rabin prime test O(logn*logn)
 // check32(int) check64(ll)
 // check if n is prime number 
@@ -147,6 +146,87 @@ namespace pollard_rho{
     }
 }
 
+// Chinese Remainder Theorem O(sz^2)
+namespace CRT{
+    ll ex_gcd(ll a, ll b, ll& x, ll& y) {
+        x = 1, y = 0;
+        ll x1 = 0, y1 = 1, a1 = a, b1 = b;
+        while (b1) {
+            ll q = a1 / b1;
+            tie(x, x1) = make_tuple(x1, x - q * x1);
+            tie(y, y1) = make_tuple(y1, y - q * y1);
+            tie(a1, b1) = make_tuple(b1, a1 - q * b1);
+        }
+        return a1;
+    }
+    ll divide(ll a, ll b, ll mod){
+        ll x,y;
+        ll g = ex_gcd(b,mod,x,y);
+        x = (x%mod+mod)%mod;
+        return a*x%mod;
+    }
+    ll calc(vector<ll>& a, vector<ll>& m){
+        int n = a.size();
+        ll M = 1;
+        for (int i=0;i<n;i++){M*=m[i];}
+        vector<ll> x(n);
+        vector<vector<ll>> r(n,vector<ll>(n));
+        for (int j=0;j<n;j++){
+            for (int i=0;i<n;i++){
+                r[j][i] = divide(1,m[j],m[i]);
+            }
+        }
+        for (int j=0;j<n;j++){
+            x[j]=a[j];
+            for (int i=0;i<j;i++){
+                x[j] = (x[j]-x[i])*r[i][j]%m[j];
+                if (x[j]<0){x[j]+=m[j];}
+            }
+        }
+        ll ans,pre; ans=0; pre=1;
+        for (int i=0;i<n;i++){
+            ans+=x[i]*pre%M; ans%=M;
+            pre*=m[i]; pre%=M;
+        }
+        return ans;
+    };
+}
+
+// extended Euclidean algorithm
+// return gcd(a,b)
+// return (x,y) of equation ax + by = gcd(a,b)
+ll ex_gcd(ll a, ll b, ll& x, ll& y) {
+    x = 1, y = 0;
+    ll x1 = 0, y1 = 1, a1 = a, b1 = b;
+    while (b1) {
+        ll q = a1 / b1;
+        tie(x, x1) = make_tuple(x1, x - q * x1);
+        tie(y, y1) = make_tuple(y1, y - q * y1);
+        tie(a1, b1) = make_tuple(b1, a1 - q * b1);
+    }
+    return a1;
+}
+
+// modular division
+// b and mod must be relatively prime
+ll divide(ll a, ll b, ll mod){
+    a%=mod; b%=mod;
+    ll x,y;
+    ll g = ex_gcd(b,mod,x,y);
+    x = (x%mod+mod)%mod;
+    return a*x%mod;
+}
+
+// fast exponential
+ll power(ll x, ll y, ll mod) {
+    if (y == 0) { return 1; }
+    if (y % 2) { return (ll128)power(x, y - 1, mod) * x % mod; }
+    else {
+        ll ret = power(x, y / 2, mod);
+        ret = (ll128)ret*ret%mod;
+        return ret;
+    }
+}
 
 // Mobius Function Linear Sieve O(n)
 vector<ll> prime;
@@ -167,33 +247,6 @@ void MobiusGenerator(ll N) {
         }
     }
 }
-
-// GCD && LCM
-
-ll gcd (ll a, ll b) {
-   if (a > b) { swap(a, b); }
-   if (a == 0) return b;
-   return gcd(b % a, a);
-}
-ll lcm(ll a, ll b){
-	return a*b/gcd(a,b);
-}
-
-// 확장 유클리드 알고리즘
-// a,b의 gcd를 구해줄 뿐만 아니라
-// ax+by = gcd(a,b)의 x,y 값까지 구해준다
-ll ex_gcd(ll a, ll b, ll& x, ll& y) {
-    x = 1, y = 0;
-    ll x1 = 0, y1 = 1, a1 = a, b1 = b;
-    while (b1) {
-        ll q = a1 / b1;
-        tie(x, x1) = make_tuple(x1, x - q * x1);
-        tie(y, y1) = make_tuple(y1, y - q * y1);
-        tie(a1, b1) = make_tuple(b1, a1 - q * b1);
-    }
-    return a1;
-}
-
 
 ///////////////////
 /* Combinatorics */
@@ -330,6 +383,20 @@ namespace z2_basis{
 ///////////////////
 /* Discrete Math */
 
+namespace graycode{
+    int gen(int n){
+        return n^(n>>1);
+    }
+    int inv_gen(int g){
+        int ret=0;
+        while(g){
+            ret^=g;
+            g>>=1;
+        }
+        return ret;
+    }
+}
+
 // Bit operations
 int bitReverse(int n, int k) {
     int ret = 0;
@@ -344,16 +411,6 @@ int firstbit1_pow2(int n) { // n에서 비트1인 위치를 구해서 그 수를
 int eraselast(int n) { // n에서 가장 처음으로 등장하는 비트1을 지운 수를 구함
     return n &= (n-1);
 }
-bool isbit0(ll n, ll m) {
-    n >>= m;
-    if (n & 1) { return false; }
-    return true;
-}
-bool isbit1(ll n, ll m) {
-    n >>= m;
-    if (n & 1) { return true; }
-    return false;
-}
 
 
 __popcnt(ll n) // n에서의 비트1의 개수를 세줌
@@ -364,23 +421,6 @@ __builtin_popcount(x) = 3 : x에서 1의 개수 세줌
 __builtin_clz(x) = 25 : x에서 첫번째 1 앞의 0 세줌
 __builtin_ctz(x) = 2 : x에서 마지막 1 뒤의 0 세줌
 
-
-// power(X,Y,MOD) O(logY)
-ll power(ll x, ll y, ll MOD) {
-    if (y == 0) { return 1; }
-    if (y % 2) { return (ll128)power(x, y - 1, MOD) * x % MOD; }
-    else {
-        ll ret = power(x, y / 2, MOD);
-        ret = (ll128)ret*ret%MOD;
-        return ret;
-    }
-}
-
-// divide(X,Y,MOD) O(logMOD)
-// MOD 소수이고 Y와 MOD가 서로소일때
-ll divide(ll x, ll y, ll MOD) {
-    return x * power(y, MOD - 2, MOD) % MOD;
-}
 
 // BSGS(X,Y,MOD) O(sqrtMOD*logMOD)
 // X^n == Y (mod MOD)의 가장 작은 n을 찾을 때
