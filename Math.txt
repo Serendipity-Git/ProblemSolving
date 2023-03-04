@@ -355,7 +355,7 @@ namespace z2_basis{
         vector<ll> mask(d);
         function<void(ll)> insert=[&](ll x){
             ll tx=x;
-            for (ll b=59;b>=0;b--){
+            for (ll b=d-1;b>=0;b--){
                 if (tx==0){return;}
                 if (tx>>b&1){
                     if (mask[b]==0){
