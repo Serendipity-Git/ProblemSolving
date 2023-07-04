@@ -1,136 +1,61 @@
-// 0-based
-// 기본적으로 weighted이다. (default w=1)
-// init(root)로 root를 고정시킨다.
-// setLCA() 이후 lca 관련 함수를 사용할 수 있다. (lca,dist)
-// setHLD() 이후 hld 관련 함수를 사용할 수 있다. (update,query)
-// HLD를 사용하려면 segment 관련 DS를 먼저 설정해야 한다.
+// Heavy-Light Decomposition (0-based)
+struct HLD{
+    int N,cnt;
+    vector<int> h,par,pos,head,heavy;
+    vector<vector<int>> g;
 
-struct Tree{
-    int N=0,M=0,r=0;
-    vector<int> h,par,heavy,head,pos;
-    vector<vector<int>> sps;
-    vector<vector<pii>> g,c;
-    vector<ll> d;
-    vector<vector<ll>> dsps;
-    maxseg seg;
-
-    Tree(){}
-    Tree(int N): N(N){
-        g.resize(N);
-        c.resize(N);
-        h.resize(N);
-        par.resize(N);
-        d.resize(N);
+    HLD(int n){
+        N=n; cnt=0;
+        h.resize(n,-1);
+        par.resize(n,-1);
+        pos.resize(n,-1);
+        head.resize(n,-1);
+        heavy.resize(n,-1);
+        g.resize(n);
     }
-    void add(int u, int v, ll w=1){
-        g[u].push_back({v,w});
-        g[v].push_back({u,w});
-    }
-    void init(int root){
-        r=root;
-        dfs(r);
-    }
-    void dfs(int u){
-        for (auto& it:g[u]){
-            if (it.first==par[u]){continue;}
-            ll v,w; v=it.first; w=it.second;
-            c[u].push_back({v,w});
-            par[v]=u;
-            h[v]=h[u]+1;
-            d[v]=d[u]+w;
-            dfs(v);
-        }
-    }
-
-    void setLCA(){
-        int tmp=1;
-        while(tmp<N){tmp<<=1;++M;}
-        sps.resize(M); dsps.resize(M);
-        for (int j=0;j<M;j++){sps[j].resize(N); dsps[j].resize(N);}
-        for (int i=0;i<N;i++){sps[0][i]=par[i];}
-        for (int j=1;j<M;j++){
-            for (int i=0;i<N;i++){
-                sps[j][i] = sps[j-1][sps[j-1][i]];
-                dsps[j][i] = dsps[j-1][i] + dsps[j-1][sps[j-1][i]];
-            }
-        }
-    }
-    int lca(int u, int v){
-        if (h[u]>h[v]){swap(u,v);}
-        int d = h[v]-h[u];
-        if (d>0){
-            for (int j=M-1;j>=0;j--){
-                if (d>=(1<<j)){
-                    d-=(1<<j);
-                    v = sps[j][v];
-                }
-            }
-        }
-        if (u==v){return u;}
-        for (int j=M-1;j>=0;j--){
-            if (sps[j][u]!=sps[j][v]){
-                u = sps[j][u];
-                v = sps[j][v];
-            }
-        }
-        return sps[0][u];
-    }
-    ll dist(int u , int v){
-        int p = lca(u,v);
-        return d[u]+d[v]-2*d[p];
-    }
-
-    void setHLD(){
-        heavy.resize(N,-1);
-        head.resize(N);
-        pos.resize(N);
-        seg = maxseg(N); // define DS first
-        int cnt=0;
-        function<int(int)> dfs=[&](int u){
-            int ret=1;
-            int high=0;
-            for (auto& it:c[u]){
-                if (it.first==par[u]){continue;}
-                int v,w; v=it.first; w=it.second;
-                int sz = dfs(v);
-                ret+=sz;
-                if (high<sz){high=sz; heavy[u]=v;}
-            }
-            return ret;
-        };
-        function<void(int,int)> decompose=[&](int u, int h){
-            head[u]=h; pos[u]=cnt++;
-            if (heavy[u]!=-1){decompose(heavy[u],h);}
-            for (auto& it:c[u]){
-                int v = it.first;
-                if (v==heavy[u]){continue;}
-                decompose(v,v);
-            }
-        };
+    void init(int r){
+        h[r]=0;
         dfs(r);
         decompose(r,r);
-
-        // define segment operation here
-        for (int j=0;j<N;j++){
-            for (auto& it:c[j]){
-                int v,w; v=it.first; w=it.second;
-                seg.a[pos[v]] = w;
+    }
+    int dfs(int u){
+        int ret = 1;
+        int m,c; m=c=-1;
+        for (int& v:g[u]){
+            if (par[u]==v){continue;}
+            h[v]=h[u]+1;
+            par[v]=u;
+            int sub = dfs(v);
+            ret+=sub;
+            if (sub>m){
+                m=sub; heavy[u]=v;
             }
         }
-        seg.init();
+        return ret;    
     }
-    void update(int u, ll x){
-        seg.update(pos[u],x);
+    void decompose(int u, int h){
+        pos[u]=cnt; ++cnt; head[u]=h;
+        if (heavy[u]!=-1){
+            decompose(heavy[u],h);
+        }
+        for (int& v:g[u]){
+            if (par[u]==v){continue;}
+            if (v==heavy[u]){continue;}
+            decompose(v,v);
+        }
     }
-    ll query(int u, int v){
-        ll ret=0;
+    int query(int u, int v){
+        int ret = 0;
         while(head[u]!=head[v]){
-            if (h[head[u]]>h[head[v]]){swap(u,v);}
-            ret = max(ret,seg.query(pos[head[v]],pos[v]));
+            if (h[u]>h[v]){swap(u,v);}
+            // ret = seg.query(pos[head[v]],pos[v]);
+            // define ds + operation
             v = par[head[v]];
         }
         if (h[u]>h[v]){swap(u,v);}
-        ret = max(ret,seg.query(pos[u]+1,pos[v]));
+        // ret = seg.query(pos[u]+1,pos[v]); (edge query)
+        // ret = seg.query(pos[u],pos[v])l (vertex query)
+        // 해당 line은 edge에 관한 query인지 vertex에 관한 query인지에 따라 다르다
         return ret;
     }
 };
