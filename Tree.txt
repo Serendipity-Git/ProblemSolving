@@ -47,7 +47,7 @@ struct HLD{
     int query(int u, int v){
         int ret = 0;
         while(head[u]!=head[v]){
-            if (h[u]>h[v]){swap(u,v);}
+            if (h[head[u]]>h[head[v]]){swap(u,v);}
             // ret = seg.query(pos[head[v]],pos[v]);
             // define ds + operation
             v = par[head[v]];
