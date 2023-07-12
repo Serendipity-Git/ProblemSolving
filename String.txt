@@ -105,18 +105,22 @@ namespace KMP{
         }
         return z;
     }
-
-    vector<int> match(const vector<int>& text, const vector<int>& pattern){
+    vector<int> match(const vector<int>& T, const vector<int>& P){
         vector<int> ret;
-        int N,M; N = text.size(); M = pattern.size();
+        int N = T.size();
+        int M = P.size();
         if (N<M){return ret;}
-        vector<int> temp(N+M+1);
-        for (int i=0;i<M;i++){temp[i]=pattern[i];}
-        temp[M]=-INF;
-        for (int i=0;i<N;i++){temp[M+1+i]=text[i];}
-        vector<int> fail = getfail(temp);
-        for (int i=M+1;i<=M+N;i++){
-            if (fail[i]==M){ret.push_back(i-2*M);}
+        vector<int> fail = getfail(P);
+        for (int i=0,j=0; i<N;i++){
+            while(j>0 && T[i]!=P[j]){
+                j = fail[j-1];
+            }
+            if (T[i]==P[j]){
+                if (j==M-1){
+                    ret.push_back(i-M+1);
+                    j=fail[j];
+                }else{++j;}
+            }
         }
         return ret;
     }
