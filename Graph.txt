@@ -112,4 +112,69 @@ struct HLD{
     }
 };
 
+// Centroid Decomposition (0-based)
+struct Centroid{
+    int N;
+    vector<int> sub;
+    vector<bool> vis;
+    vector<vector<int>> g;
 
+    void dfs(int u, int p){
+        int& ret = sub[u];
+        ret=1;
+        for (int& v:g[u]){
+            if (vis[v] || v==p){continue;}
+            ret+=dfs(v,u);
+        }
+        return ret;
+    }
+    int cent(int u, int p, int sz){
+        for (int& v:g[u]){
+            if (vis[v] || v==p){continue;}
+            if (2*sub[v]>sz){return cent(v,u,sz);} 
+        }
+        return u;
+    }
+    
+    // 답 구할때 필요한 탐색을 하는 function
+    // operation을 정의해서 알맞게 변형해야 한다
+    void dfs2(int u, int p, int d, vector<int>& tmp){
+        tmp.push_back(d);
+        for (int& v:g[u]){
+            if (v==p || vis[v]){continue;}
+            dfs2(v,u,d+1,tmp);
+        }
+    }
+
+    // Divide and Conquer로 답 구하는 function
+    // 필요한 operation을 정의해야 한다
+    void calc(int u){
+        int sz = dfs(u,-1);
+        int cen = cent(u,-1,sz);
+        vis[cen]=1;
+        
+        // vector<int> store; // 무언가 기록할 것
+        // store.push_back(cen);
+        // cen에서 처리해야 할 것을 먼저 처리하는 부분
+        for (int& v:g[cen]){
+            vector<int> tmp;
+            dfs2(v,cen,tmp);
+            for (int& x:tmp){
+                // ans = min(ans, x); // 필요한 operation 처리
+            }
+            for (int& x:tmp){
+                // dis[x] = min(dis[x], x); // tmp 정보로 update
+            }
+        }
+
+        // 원래대로 돌려놓는 과정
+        for (auto& x:store){
+            // dis[x] = INF; // 원래대로 초기화 해야 한다.
+        }
+        
+        // cen의 subtree들에 대해서 재귀적으로 수행한다.
+        for (int& v:g[cen]){
+            if (!vis[v]){calc(v);}
+        }
+    }
+};
