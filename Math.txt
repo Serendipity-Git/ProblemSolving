@@ -380,6 +380,105 @@ namespace z2_basis{
     }
 }
 
+// gauss elimination
+namespace gauss{
+    // general real number 
+    int gauss(vector<vector<double>> a, vector<double> b, vector<double>& ans){
+        const double EPS = -1E9;
+        int N = a.size();
+        int M = a[0].size();
+        vector<int> where(M,-1);
+
+        for(int row=0,col=0; col<M && row<N; col++){
+            int sel=row;
+            for (int j=row;j<N;j++){
+                if (abs(a[j][col]) > abs(a[sel][col])){sel=j;}
+            }
+            if (abs(a[sel][col]) < EPS){continue;}
+
+            for(int i=col;i<M;i++){
+                swap(a[row][i],a[sel][i]);
+            }
+            swap(b[row],b[sel]);
+            where[col] = row;
+
+            for (int j=0;j<N;j++){
+                if (j!=row){
+                    double c = a[j][col] / a[row][col];
+                    for (int i=col;i<M;i++){
+                        a[j][i]-= c*a[row][i];
+                    }
+                    b[j]-=c*b[row];
+                }
+            }
+            ++row;
+        }
+
+        for(int i=0;i<M;i++){ans[i]=0;}
+        for(int i=0;i<M;i++){
+            if (where[i]!=-1){
+                ans[i] = b[where[i]] / a[where[i]][i];
+            }
+        }
+        for (int j=0;j<N;j++){
+            double sum=0;
+            for(int i=0;i<M;i++){
+                sum+=a[j][i]*ans[i];
+            }
+            if (abs(sum-b[j]) > EPS){return 0;}
+        }
+        for(int i=0;i<M;i++){
+            if (where[i]==-1){return 2;}
+        }
+        return 1;
+    }
+
+    // binary linear system
+    int gauss2(vector<bitset<N>> a, vector<bitset<1>> b, int n, int m, bitset<N>& ans){
+        vector<int> where(m,-1);
+
+        for(int row=0,col=0; col<m && row<n; col++){
+            int sel=row;
+            for (int j=row;j<n;j++){
+                if (a[j][col]){
+                    swap(a[j],a[row]);
+                    swap(b[j],b[row]);
+                    break;
+                }
+            }
+            if (!a[row][col]){continue;}
+            where[col] = row;
+
+            for (int j=0;j<n;j++){
+                if (j!=row && a[j][col]){
+                    a[j]^=a[row];
+                    b[j]^=b[row];
+                }
+            }
+            ++row;
+        }
+
+        for(int i=0;i<m;i++){ans[i]=0;}
+        for(int i=0;i<m;i++){
+            if (where[i]!=-1 && a[where[i]][i]==1){
+                ans[i] = b[where[i]];
+            }
+        }
+        for (int j=0;j<n;j++){
+            int sum=0;
+            for(int i=0;i<m;i++){
+                sum+=a[j][i]*ans[i]%2;
+                sum%=2;
+            }
+            if (sum!=b[j]){return 0;}
+        }
+        for(int i=0;i<m;i++){
+            if (where[i]==-1){return 2;}
+        }
+        return 1;
+    }
+}
+
 ///////////////////
 /* Discrete Math */
 
