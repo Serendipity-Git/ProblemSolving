@@ -161,135 +161,14 @@ struct maxflow{
     }
 };
 
+// Konig's theorem
+// vertex cover : subset of vertex S -> 모든 간선의 양 끝점 중 하나가 S에 포함됨
+// independent set : subset of vertex S -> S에 속한 점끼리 edge가 존재하지 않음
+// matching : subset of edge E -> E끼리는 인접하지 않음
 
-// Hopcroft-Karp O(E*sqrt(V))
-// 0-based이다
-// 양방향이다
-// L->R로만 edge를 추가해주면 된다
-
-// konigs theorem
-// 이분 그래프에서 |Minimum V.C.| = |Maximum Matching|
-// Minimum V.C. = 전체 vertex - Independent Set
-
-struct bimatch{
-    int N,M;
-    vector<int> L,R,level,see;
-    vector<vector<int>> adj;
-    queue<int> que;
-
-    bimatch(){N=M=0;}
-    bimatch(int n, int m){
-        N=n; M=m;
-        L.resize(N); R.resize(M);
-        level.resize(N); see.resize(N);
-        adj.resize(N);
-    }
-    void addEdge(int u, int v){
-        adj[u].push_back(v);
-    }
-    bool dfs(int n) {
-        for (; see[n] < adj[n].size(); see[n]++) {
-            int it = adj[n][see[n]];
-            if (R[it] == -1 || level[R[it]] == level[n] + 1 && dfs(R[it])) {
-                L[n] = it;
-                R[it] = n;
-                return true;
-            }
-        }
-        return false;
-    }
-    void bfs() {
-        for (int i = 0; i < N; i++) {
-            if (L[i] == -1) { que.push(i); level[i] = 0; }
-            else { level[i] = INF; }
-            see[i] = 0;
-        }
-        while (!que.empty()) {
-            int cur = que.front(); que.pop();
-            for (auto it : adj[cur]) {
-                if (R[it] != -1 && level[R[it]] == INF) {
-                    que.push(R[it]); level[R[it]] = level[cur] + 1;
-                }
-            }
-        }
-    }
-    ll query() {
-        ll ret = 0;
-        for (int i=0;i<N;i++){L[i]=-1;}
-        for (int i=0;i<M;i++){R[i]=-1;}
-        while (true) {
-            bfs();
-            ll flow = 0;
-            for (int i = 0; i < N; i++) {
-                if (L[i] == -1 && dfs(i)) { ++flow; }
-            }
-            if (flow == 0) { break; }
-            ret += flow;
-        }
-        return ret;
-    }
-
-	vector<pi> VC(){
-		vector<vector<int>> new_adj(N+M);
-		vector<bool> visited(N+M);
-		vector<pi> ret;
-		for (int i=0;i<N;i++){
-			for (auto& it:adj[i]){
-				if (it!=L[i]){new_adj[i].push_back(it+N);}
-			}
-		}
-		for (int i=0;i<M;i++){
-			if (R[i]!=-1){new_adj[i+N].push_back(R[i]);}			
-		}
-		
-		for (int i=0;i<N;i++){
-			if (L[i]==-1){que.push(i); visited[i]=true;}
-		}
-		while(!que.empty()){
-			int tmp = que.front();que.pop();
-			for (auto& it:new_adj[tmp]){
-				if (!visited[it]){que.push(it); visited[it]=true;}
-			}
-		}
-		for (int i=0;i<N;i++){
-			if (!visited[i]){ret.push_back({i,0});}
-		}
-		for (int i=N;i<N+M;i++){
-			if (visited[i]){ret.push_back({i-N,1});}
-		}
-		return ret;
-	}
-	vector<pi> IS(){
-		vector<vector<int>> new_adj(N+M);
-		vector<bool> visited(N+M);
-		vector<pi> ret;
-		for (int i=0;i<N;i++){
-			for (auto& it:adj[i]){
-				if (it!=L[i]){new_adj[i].push_back(it+N);}
-			}
-		}
-		for (int i=0;i<M;i++){
-			if (R[i]!=-1){new_adj[i+N].push_back(R[i]);}			
-		}
-		
-		for (int i=0;i<N;i++){
-			if (L[i]==-1){que.push(i); visited[i]=true;}
-		}
-		while(!que.empty()){
-			int tmp = que.front();que.pop();
-			for (auto& it:new_adj[tmp]){
-				if (!visited[it]){que.push(it); visited[it]=true;}
-			}
-		}
-		for (int i=0;i<N;i++){
-			if (visited[i]){ret.push_back({i,0});}
-		}
-		for (int i=N;i<N+M;i++){
-			if (!visited[i]){ret.push_back({i-N,1});}
-		}
-		return ret;
-	}
-};
+// Konig's Theorem : In bigraph, |minimum vertex cover| = |maximum matching|
+// How ? Find min-cut in bigraph, then (unreachable in A + reachable in B) = vertex cover = |min-cut|
+// independent set = { U - vertex cover }
 
 
 // MaxFlow - MinCost O(V*E*F)~O(E*F)
@@ -538,83 +417,56 @@ struct circulation{
 
 
 // Blossom Algorithm O(VE)
-// 1-based 
 // maximum matching in general graph
-struct Blossom{
-    // 출처 : https://blog.kyouko.moe/20
-    int t,N;
-    vector<int> vis,par,bl,match,aux;
-    vector<vector<int>> g;
-    queue<int> que;
-
-    Blossom(int n){
-        N=n; t=0;
-        vis.resize(N+1);
-        bl.resize(N+1);
-        par.resize(N+1);
-        match.resize(N+1);
-        aux.resize(N+1);
-        g.resize(N+1);
+vector<int> Blossom(vector<vector<int>>& graph) {
+    int n = graph.size(), timer = -1;
+    vector<int> mate(n, -1), label(n), parent(n), 
+                orig(n), aux(n, -1), q;
+    auto lca = [&](int x, int y) {
+        for (timer++; ; swap(x, y)) {
+        if (x == -1) continue;
+        if (aux[x] == timer) return x;
+        aux[x] = timer;
+        x = (mate[x] == -1 ? -1 : orig[parent[mate[x]]]);
+        }
     };
-    void addEdge(int u, int v){
-        g[u].push_back(v);
-        g[v].push_back(u);
-    }
-    void augment(int u, int v) {
-        int pv = v, nv;
-        do {
-            pv = par[v]; nv = match[pv];
-            match[v] = pv; match[pv] = v;
-            v = nv;
-        } while(u != pv);
-    }
-    int lca(int v, int w) {
-        ++t;
-        while(true) {
-            if (v) {
-                if(aux[v] == t) {return v;}
-                aux[v] = t;
-                v = bl[par[match[v]]];
-            }
-            swap(v, w);
+    auto blossom = [&](int v, int w, int a) {
+        while (orig[v] != a) {
+        parent[v] = w; w = mate[v];
+        if (label[w] == 1) label[w] = 0, q.push_back(w);
+        orig[v] = orig[w] = a; v = parent[w];
         }
-    }
-    void blossom(int v, int w, int a) {
-        while(bl[v] != a) {
-            par[v] = w; w = match[v];
-            if(vis[w] == 1) {que.push(w); vis[w] = 0;}
-            bl[v] = bl[w] = a;
-            v = par[w];
+    };
+    auto augment = [&](int v) {
+        while (v != -1) {
+        int pv = parent[v], nv = mate[pv];
+        mate[v] = pv; mate[pv] = v; v = nv;
         }
-    }
-    bool bfs(int u) {
-        for (int i=1;i<=N;i++){
-            vis[i]=-1;
-            bl[i]=i;
-        }
-        while(!que.empty()){que.pop();}
-        que.push(u); vis[u]=0;
-        while(!que.empty()) {
-            int v = que.front(); que.pop();
-            for(int x: g[v]) {
-                if(vis[x] == -1) {
-                    par[x] = v; vis[x] = 1;
-                    if(!match[x]) {augment(u,x); return true;}
-                    que.push(match[x]); vis[match[x]]=0;
-                }
-                else if(vis[x] == 0 && bl[v] != bl[x]) {
-                    int a = lca(bl[v], bl[x]);
-                    blossom(x, v, a); blossom(v, x, a);
-                }
+    };
+    auto bfs = [&](int root) {
+        fill(label.begin(), label.end(), -1);
+        iota(orig.begin(), orig.end(), 0);
+        q.clear(); 
+        label[root] = 0; q.push_back(root);
+        for (int i = 0; i < (int)q.size(); ++i) {
+        int v = q[i];
+        for (auto x : graph[v]) {
+            if (label[x] == -1) {
+            label[x] = 1; parent[x] = v;
+            if (mate[x] == -1) 
+                return augment(x), 1;
+            label[mate[x]] = 0; q.push_back(mate[x]);
+            } else if (label[x] == 0 && orig[v] != orig[x]) {
+            int a = lca(orig[v], orig[x]);
+            blossom(x, v, a); blossom(v, x, a);
             }
         }
-        return false;
-    }
-    int query(){
-        int ans=0;
-        for (int i=1;i<=N;i++){
-            if (!match[i] && bfs(i)){++ans;}
         }
-        return ans;
-    }
-};
+        return 0;
+    };
+    // Time halves if you start with (any) maximal matching.
+    for (int i = 0; i < n; i++) 
+        if (mate[i] == -1) 
+        bfs(i);
+    return mate;
+}
