@@ -1,109 +1,22 @@
 // Dinic algorithm O(V^2*E)
 // 0-based이다
 // 단방향 그래프이다
-
-// fast version
-struct maxflow{
-    struct Edge{
-        int u,v,rev=0;
-        ll c,f=0;
-        Edge(int u, int v, ll c) : u(u), v(v), c(c){}
-        ll spare() { return c - f; }
-    };
-    
-    int N,s,t;
-    vector<vector<Edge>> adj;
-    vector<int> level,see;
-    queue<int> que;
-
-    maxflow(){N=s=t=0;}
-    maxflow(int n, int s, int t):N(n),s(s),t(t){
-        level.resize(N);
-        see.resize(N);
-        adj.resize(N);
-    }
-    void add(Edge& e, ll inc) {
-        e.f+=inc;
-        adj[e.v][e.rev].f-=inc;
-    }
-    void addEdge(int u, int v, ll c, bool undirected = 0) {
-        Edge e1 = Edge(u,v,c);
-        if (undirected){
-            Edge e2 = Edge(v,u,c);
-            e1.rev = adj[v].size();
-            e2.rev = adj[u].size();
-            adj[u].push_back(e1);
-            adj[v].push_back(e2);
-        }
-        else{
-            Edge e2 = Edge(v,u,0);
-            e1.rev = adj[v].size();
-            e2.rev = adj[u].size();
-            adj[u].push_back(e1);
-            adj[v].push_back(e2);
-        }
-    }
-    bool bfs() {
-        for (int i=0;i<N;i++){level[i]=-1;}
-        level[s] = 0; que.push(s);
-        while (!que.empty()) {
-            int cur = que.front(); que.pop();
-            for (auto& it : adj[cur]) {
-                ll sp = it.spare();
-                if (sp > 0 && level[it.v] == -1) {
-                    que.push(it.v); level[it.v] = level[cur] + 1;
-                }
-            }
-        }
-        if (level[t] == -1) { return false; }
-        return true;
-    }
-    ll dfs(int n, ll flow) {
-        if (n == t) { return flow; }
-        for (int& i = see[n]; i < (int)adj[n].size(); i++) {
-            Edge& e = adj[n][i];
-            int next = e.v;
-            ll sp = e.spare();
-            if (sp > 0 && level[next] == level[n] + 1) {
-                ll f = dfs(next, min(flow, sp));
-                if (f > 0) { add(e,f); return f; }
-            }
-        }
-        return 0;
-    }
-    ll query() {
-        ll ret = 0;
-        while (bfs()) {
-            for (int i=0;i<N;i++){see[i]=0;}
-            while (true) {
-                ll f = dfs(s, LLINF);
-                if (f == 0) { break; }
-                ret += f;
-            }
-        }
-        return ret;
-    }
-};
-
-// easy version
 struct maxflow{
     struct edge{
         int u,v;
         ll c,f=0;
         edge(int u, int v, ll c):u(u),v(v),c(c){}
-
     };
 
-    int N,s,t,M=0;
+    int N,M=0,s,t;
     vector<edge> E;
     vector<int> level,see;
     vector<vector<int>> adj;
     queue<int> que;
 
-    maxflow(int N, int s, int t):N(N),s(s),t(t){
+    maxflow(int N):N(N){
         level.resize(N); see.resize(N); adj.resize(N);
     }
-
     void addEdge(int u, int v, ll c, bool undirected=0){
         if (undirected){
             E.emplace_back(u,v,c);
@@ -149,8 +62,9 @@ struct maxflow{
         }
         return 0;
     }
-    ll query(){
+    ll query(int s, int t){
         ll ans=0;
+        this->s = s; this->t = t;
         while(bfs()){
             fill(see.begin(),see.end(),0);
             while(ll flow = dfs(s,LLINF)){
@@ -175,98 +89,26 @@ struct maxflow{
 // 0-based이다
 // 단방향이다
 // edge의 cost까지도 추가해줘야 한다
-
-// fast version
-struct MCMF{
-    struct Edge {
-        int to,rev;
-        ll cap, flow, cost;
-        Edge(){to=rev=cap=flow=cost=0;}
-        Edge(int _to, ll _cap, ll _cost) :to(_to), cap(_cap), cost(_cost), flow(0) {}
-        ll spare() { return cap - flow; }
-    };
-	int N,s,t;
-	vector<vector<Edge>> adj;
-
-	MCMF(){N=s=t=0;}
-	MCMF(int _n, int _s, int _t){
-		N=_n; s=_s; t=_t;
-		adj.resize(N);
-	}
-    void add(Edge& e, ll inc) {
-        e.flow+=inc;
-        adj[e.to][e.rev].flow-=inc;
-    }
-	void addEdge(int u, int v, ll cap, ll cost) {
-        Edge e1 = Edge(v,cap,cost);
-        Edge e2 = Edge(u,0,-cost);
-        e1.rev = adj[v].size();
-        e2.rev = adj[u].size();
-        adj[u].push_back(e1);
-        adj[v].push_back(e2);
-	}
-
-	pair<ll, ll> query() {
-		pii ret;
-		ll cans = 0, fans = 0;
-		while (true) {
-			vector<ll> dis(N,LLINF);
-			vector<int> prev(N,-1);
-			vector<bool> inque(N);
-			vector<Edge*> path(N);
-			queue<int> que;
-
-			que.push(s); inque[s] = true; dis[s] = 0;
-			while (!que.empty()) {
-				int cur = que.front(); que.pop(); inque[cur] = false;
-				for (auto& it : adj[cur]) {
-					if (it.spare() > 0 && dis[it.to] > dis[cur] + it.cost) {
-						if (!inque[it.to]) { que.push(it.to); inque[it.to] = true; }
-						dis[it.to] = dis[cur] + it.cost;
-						prev[it.to] = cur;
-						path[it.to] = &it;
-					}
-				}
-			}
-			if (prev[t] == -1) { break; }
-			ll flow = INF;
-			for (ll i = t; i != s; i = prev[i]) {
-				flow = min(flow, path[i]->spare());
-			}
-			fans += flow;
-			for (ll i = t; i != s; i = prev[i]) {
-				cans += path[i]->cost;
-				add(*path[i],fans);
-			}
-		}
-		ret.first = fans;
-		ret.second = cans;
-		return ret;
-	}
-};
-
-// easy version
 struct mcmf{
     struct edge{
         int u,v;
-        ll c,f=0,w;
+        ll c,w,f=0;
         edge(int u, int v, ll c, ll w):u(u),v(v),c(c),w(w){}
     };
 
     int N,s,t,M=0;
     vector<edge> E;
-    vector<int> vis;
+    vector<int> back;
     vector<ll> dis,flow;
     vector<vector<int>> adj;
     queue<int> que;
 
-    mcmf(int N, int s, int t):N(N),s(s),t(t){
+    mcmf(int N):N(N){
         adj.resize(N);
-        vis.resize(N);
-        dis.resize(N);
+        back.resize(N);
         flow.resize(N);
+        dis.resize(N);
     }
-
     void addEdge(int u, int v, ll c, ll w){
         E.emplace_back(u,v,c,w);
         E.emplace_back(v,u,0,-w);
@@ -274,51 +116,46 @@ struct mcmf{
         adj[v].push_back(M+1);
         M+=2;
     }
-    pii spfa(){
-        fill(flow.begin(),flow.end(),LLINF);
+    void spfa(){
+        fill(back.begin(),back.end(),-1);
+        fill(flow.begin(),flow.end(),0);
         fill(dis.begin(),dis.end(),LLINF);
-        fill(vis.begin(),vis.end(),-1);
-        que.push(s); dis[s]=0;
+
+        dis[s]=0; que.push(s); flow[s]=LLINF;
         while(!que.empty()){
             int u = que.front(); que.pop();
             for (int& e:adj[u]){
-                int v = E[e].v;
-                ll w = E[e].w;
+                int v = E[e].v; 
                 ll sp = E[e].c - E[e].f;
+                ll w = E[e].w;
                 if (sp>0 && dis[v]>dis[u]+w){
+                    back[v] = e;
+                    flow[v] = min(flow[u],sp);
                     dis[v] = dis[u]+w;
-                    vis[v] = e;
-                    flow[v] = min(sp,flow[u]);
                     que.push(v);
                 }
             }
         }
-        if (vis[t]==-1){return {0,0};}
-        if (flow[t]==0){return {0,0};}
-
-        int v = t;
-        ll fret = flow[t];
-        ll wret = 0;
-        while(v!=s){
-            int e = vis[v];
-            int u = E[e].u;
-            ll w = E[e].w;
-            wret+=w*fret;
-            E[e].f+=fret;
-            E[e^1].f-=fret;
-            v = u;
-        }
-        return {fret,wret};
     }
-    pii query(){
+    pii query(int s, int t){
         pii ans={0,0};
+        this->s = s; this->t = t;
         while(true){
-            pii ret = spfa();
-            ll f,w; f=ret.first; w=ret.second;
-            ans.first+=f; ans.second+=w;
-            if (f==0){break;}
+            spfa();
+            if (flow[t]==0){return ans;}
+
+            int u = t;
+            ll f = flow[t];
+            ans.first+=f;
+            while(u!=s){
+                int e = back[u];
+                E[e].f+=f;
+                E[e^1].f-=f;
+                ll w = E[e].w;
+                ans.second+=w*f;
+                u = E[e].u;
+            }
         }
-        return ans;
     }
 };
 
@@ -328,7 +165,6 @@ struct mcmf{
 // maxflow > graph.sum이면 가능한 flow가 없는 것이다.
 // 설계한 circulation graph의 edge를 모두 설정하고 init()으로 circulation graph를 만든다
 // 가능한 flow가 존재한다면, E[e].l + E[e].f로 e에 흐르는 실제 flow를 구할 수 있다.
-
 struct circulation{
     struct edge{
         int u,v;
@@ -336,7 +172,7 @@ struct circulation{
         edge(int u, int v, ll c, ll l):u(u),v(v),c(c),l(l){}
     };
 
-    int N,s,t,s_,t_,M=0;
+    int N,s,t,M=0;
     ll sum=0;
     vector<ll> d;
     vector<int> level,see;
@@ -344,7 +180,7 @@ struct circulation{
     vector<edge> E;
     queue<int> que;
 
-    circulation(int N, int s, int t, int s_, int t_):N(N),s(s),t(t),s_(s_), t_(t_){
+    circulation(int N): N(N){
         level.resize(N); see.resize(N); d.resize(N);
         adj.resize(N);
     }
@@ -357,20 +193,20 @@ struct circulation{
         adj[v].push_back(M+1);
         M+=2;
     }
-    void init(){
+    void init(int new_s, int new_t){
         for (int i=0;i<N;i++){
-            if (i==s_ || i==t_){continue;}
+            if (i==new_s || i==new_t){continue;}
             if (d[i]>0){
-                addEdge(i,t_,0,d[i]);
+                addEdge(i,new_t,0,d[i]);
                 sum+=d[i];
             }else if (d[i]<0){
-                addEdge(s_,i,0,-d[i]);
+                addEdge(new_s,i,0,-d[i]);
             }
         }
     }
     bool bfs(){
         fill(level.begin(),level.end(),-1);
-        level[s_]=0; que.push(s_);
+        level[s]=0; que.push(s);
         while(!que.empty()){
             int u = que.front(); que.pop();
             for (int e:adj[u]){
@@ -382,10 +218,10 @@ struct circulation{
                 }
             }
         }
-        return (level[t_]!=-1);
+        return (level[t]!=-1);
     }
     ll dfs(int u ,ll flow){
-        if (u==t_){return flow;}
+        if (u==t){return flow;}
         if (flow==0){return 0;}
 
         for (int& i=see[u]; i<(int)adj[u].size();i++){
@@ -403,14 +239,15 @@ struct circulation{
         }
         return 0;
     }
-    ll query(){
+    ll query(int s, int t){
+        this->s=s; this->t=t;
         ll ans = 0;
         while(bfs()){
             fill(see.begin(),see.end(),0);
-            while(ll f = dfs(s_,LLINF)){
+            while(ll f = dfs(s,LLINF)){
                 ans+=f;
             }
-        }   
+        }
         return ans;
     }
 };
