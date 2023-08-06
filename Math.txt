@@ -496,6 +496,17 @@ namespace graycode{
     }
 }
 
+// floor sum O(log(min(m,a)))
+// sum [(ai+b)/m], i:0->n
+ll floor_sum(ll a, ll b, ll m, ll n){
+    if (a==0){return b/m*(n+1);}
+    if (a>=m || b>=m){
+        return a/m*n*(n+1)/2 + b/m*(n+1) + floor_sum(a%m,b%m,m,n);
+    }
+    ll x = (a*n+b)/m;
+    return x*n - floor_sum(m,m-b-1,a,x-1);
+}
+
 // Bit operations
 int bitReverse(int n, int k) {
     int ret = 0;
