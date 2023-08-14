@@ -681,71 +681,59 @@ struct pst{
 -> Sparse table 만들기 O(NlogN)
 -> 쿼리 1개 처리 O(logN) // O(1)
 
-struct minsps {
-    ll N;
+struct minsps{
+    int N,M;
     vector<ll> a;
     vector<vector<ll>> v;
-
-    minsps() { N = 0; }
-    minsps(ll n) {
+    minsps(int n){
         N = n;
-        a.resize(n);
-        v.resize(log2(n) + 1);
-        for (int j = 0; j < v.size(); j++) {
-            v[j].resize(n);
-        }
+        M = 31 - __builtin_clz(N);
+        a.resize(N);
+        v.resize(M+1);
+        for (int j=0;j<=M;j++){v[j].resize(N);}
     }
-
-    void init() {
-        for (int i = 0; i < N; i++) { v[0][i] = a[i]; }
-        for (int k = 1; (1LL << k) < N; k++) {
-            for (int i = 0; i + (1LL << (k - 1)) < N; i++) {
-                v[k][i] = min(v[k - 1][i], v[k - 1][i + (1LL << (k - 1))]);
+    void init(){
+        for(int i=0;i<N;i++){v[0][i] = a[i];}
+        for (int j=1;j<=M;j++){
+            for(int i=0;i<N;i++){
+                if (i+(1<<j-1)<N){
+                    v[j][i] = min(v[j-1][i], v[j-1][i+(1<<j-1)]);
+                }
             }
         }
     }
-
-    ll query(ll l, ll r) {
-        ll D = r - l + 1;
-        ll cnt = 0;
-        while ((1LL << cnt) * 2 < D) {
-            ++cnt;
-        }
-        return min(v[cnt][l], v[cnt][r + 1 - (1LL << cnt)]);
+    ll query(int l, int r){
+        int d = r-l+1;
+        int m = 31 - __builtin_clz(d);
+        return min(v[m][l], v[m][r+1-(1<<m)]);
     }
 };
 
-struct maxsps {
-    ll N;
+struct maxsps{
+    int N,M;
     vector<ll> a;
     vector<vector<ll>> v;
-
-    maxsps() { N = 0; }
-    maxsps(ll n) {
+    minsps(int n){
         N = n;
-        a.resize(n);
-        v.resize(log2(n) + 1);
-        for (int j = 0; j < v.size(); j++) {
-            v[j].resize(n);
-        }
+        M = 31 - __builtin_clz(N);
+        a.resize(N);
+        v.resize(M+1);
+        for (int j=0;j<=M;j++){v[j].resize(N);}
     }
-
-    void init() {
-        for (int i = 0; i < N; i++) { v[0][i] = a[i]; }
-        for (int k = 1; (1LL << k) < N; k++) {
-            for (int i = 0; i + (1LL << (k - 1)) < N; i++) {
-                v[k][i] = max(v[k - 1][i], v[k - 1][i + (1LL << (k - 1))]);
+    void init(){
+        for(int i=0;i<N;i++){v[0][i] = a[i];}
+        for (int j=1;j<=M;j++){
+            for(int i=0;i<N;i++){
+                if (i+(1<<j-1)<N){
+                    v[j][i] = max(v[j-1][i], v[j-1][i+(1<<j-1)]);
+                }
             }
         }
     }
-
-    ll query(ll l, ll r) {
-        ll D = r - l + 1;
-        ll cnt = 0;
-        while ((1LL << cnt) * 2 < D) {
-            ++cnt;
-        }
-        return max(v[cnt][l], v[cnt][r + 1 - (1LL << cnt)]);
+    ll query(int l, int r){
+        int d = r-l+1;
+        int m = 31 - __builtin_clz(d);
+        return max(v[m][l], v[m][r+1-(1<<m)]);
     }
 };
 
