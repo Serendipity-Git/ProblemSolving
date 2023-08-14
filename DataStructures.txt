@@ -305,7 +305,7 @@ struct lazy_sumseg {
     vector<ll> a, seg, lazy;
     lazy_sumseg() { N = 0; }
     lazy_sumseg(int n) {
-        N = n; 
+        N = n;
         int M=1;
         while(M<N){M<<=1;}
         a.resize(n);
@@ -353,7 +353,7 @@ struct lazy_maxseg {
     vector<ll> a, seg, lazy;
     lazy_maxseg() { N = 0; }
     lazy_maxseg(int n) {
-        N = n; 
+        N = n;
         int M=1;
         while(M<N){M<<=1;}
         a.resize(n);
@@ -401,7 +401,7 @@ struct lazy_minseg {
     vector<ll> a, seg, lazy;
     lazy_minseg() { N = 0; }
     lazy_minseg(int n) {
-        N = n; 
+        N = n;
         int M=1;
         while(M<N){M<<=1;}
         a.resize(n);
@@ -449,7 +449,7 @@ struct lazy_xorseg {
     vector<ll> a, seg, lazy;
     lazy_xorseg() { N = 0; }
     lazy_xorseg(int n) {
-        N = n; 
+        N = n;
         int M=1;
         while(M<N){M<<=1;}
         a.resize(n);
@@ -504,7 +504,7 @@ struct arrseg{
     int N;
     vector<ll> a;
     vector<arr> seg;
-    
+
     arrseg(){N=0;}
     arrseg(int N):N(N){
         a.resize(4*N);
@@ -577,7 +577,7 @@ struct mergetree{
         while(lp<rp){
             if (lp&1){
                 // define operation here
-                
+
                 ++lp;
             }
             if (rp&1){
@@ -627,7 +627,7 @@ struct pst{
         seg[cur].r = sz+1;
         sz+=2;
         seg[cur].v = init(l,mid,seg[cur].l)+init(mid+1,r,seg[cur].r); // define operation
-        return seg[cur].v;   
+        return seg[cur].v;
     }
 
     void update(int i, ll inc, int cur, int prev){
@@ -713,7 +713,7 @@ struct maxsps{
     int N,M;
     vector<ll> a;
     vector<vector<ll>> v;
-    minsps(int n){
+    maxsps(int n){
         N = n;
         M = 31 - __builtin_clz(N);
         a.resize(N);
@@ -737,7 +737,7 @@ struct maxsps{
     }
 };
 
-// min-max-queue 
+// min-max-queue
 // queue 내의 min과 max값을 구할 수 있다.
 // 나머지 push,empty,pop,front는 일반 queue 연산과 같고
 // getmin, getmax 통해서 queue 내의 min,max 구할수 있다.
@@ -776,9 +776,9 @@ struct minmaxqueue{
                     if (Ms1.top()<tmp){Ms1.push(tmp);}
                     else{Ms1.push(Ms1.top());}
                 }
-                s1.push(tmp);             
+                s1.push(tmp);
             }
-        }  
+        }
         T ret = s1.top();
         return ret;
     };
