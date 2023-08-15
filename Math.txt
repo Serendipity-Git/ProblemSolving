@@ -434,7 +434,7 @@ namespace gauss{
     }
 
     // binary linear system
-    int gauss2(vector<bitset<N>> a, vector<bitset<1>> b, int n, int m, bitset<N>& ans){
+    int gauss2(vector<bitset<m>> a, vector<bitset<1>> b, int n, int m, bitset<m>& ans){
         vector<int> where(m,-1);
 
         for(int row=0,col=0; col<m && row<n; col++){
@@ -461,7 +461,7 @@ namespace gauss{
         for(int i=0;i<m;i++){ans[i]=0;}
         for(int i=0;i<m;i++){
             if (where[i]!=-1 && a[where[i]][i]==1){
-                ans[i] = b[where[i]];
+                ans[i] = b[where[i]][0];
             }
         }
         for (int j=0;j<n;j++){
@@ -470,7 +470,7 @@ namespace gauss{
                 sum+=a[j][i]*ans[i]%2;
                 sum%=2;
             }
-            if (sum!=b[j]){return 0;}
+            if (sum!=b[j][0]){return 0;}
         }
         for(int i=0;i<m;i++){
             if (where[i]==-1){return 2;}
