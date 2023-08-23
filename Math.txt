@@ -30,9 +30,9 @@ namespace sieve{
     }
 }
 
-// Euler Phi
+// Euler Phi : # of coprime numbers
 // get : O(sqrt(N))
-// gen : O(NloglogN)
+// gen : O(N)
 namespace euler_phi{
     ll get(ll n){
         ll phi = n;
@@ -47,16 +47,26 @@ namespace euler_phi{
     }
 
     vector<int> gen(int n){
-        vector<int> phi(n+1);
-        for (int i=1;i<=n;i++){phi[i]=i;}
-        for (int j=2;j<=n;j++){
-            if (phi[j]==j){
-                for (int i=j;i<=n;i+=j){
-                    phi[i]-=phi[i]/j;
+        vector<int> ret(n+1),vis(n+1);
+        vector<int> prime;
+        ret[1] = 1;
+        for (int i=2;i<=n;i++){
+            if (!vis[i]){
+                prime.push_back(i);
+                ret[i] = i-1;
+            }
+            for (auto& p:prime){
+                if (i*p>n){break;}
+                vis[i*p] = 1;
+                if (i%p==0){
+                    ret[i*p] = ret[i]*p;
+                    break;
+                }else{
+                    ret[i*p] = ret[i]*ret[p];
                 }
             }
         }
-        return phi;
+        return ret;
     }
 }
 
@@ -229,22 +239,28 @@ ll power(ll x, ll y, ll mod) {
 }
 
 // Mobius Function Linear Sieve O(n)
-vector<ll> prime;
-ll Mobius[MAX];
-void MobiusGenerator(ll N) {
-    Mobius[1] = 1;
-    bool isprime[MAX + 1];
-    memset(isprime, true, sizeof(isprime));
-    for (ll j = 2; j <= N; j++) {
-        if (isprime[j]) {
-            prime.push_back(j);
-            Mobius[j] = -1;
+namespace mobius{
+    vector<int> get(int n){
+        vector<int> ret(n+1),vis(n+1);
+        vector<int> prime;
+        ret[1] = 1;
+        for (int i=2;i<=n;i++){
+            if (!vis[i]){
+                prime.push_back(i);
+                ret[i] = -1;
+            }
+            for (auto& p:prime){
+                if (p*i>n){break;}
+                vis[p*i] = 1;
+                if (i%p==0){
+                    ret[p*i] = 0;
+                    break;
+                }else{
+                    ret[p*i] = -ret[i];
+                }
+            }
         }
-        for (ll i = 0; i < prime.size() && j * prime[i] <= N; ++i) {
-            isprime[j * prime[i]] = false;
-            if (j % prime[i] == 0) break;
-            Mobius[j * prime[i]] = -Mobius[j];
-        }
+        return ret;
     }
 }
 
