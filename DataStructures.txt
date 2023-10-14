@@ -639,6 +639,8 @@ struct pst{
         int mid = (l+r)>>1;
         return cquery(from,to,l,mid,seg[node].l) + cquery(from,to,mid+1,r,seg[node].r);
     }
+    // [L,R] 구간에서 k번째로 큰 원소를 찾는다.
+    // rt[R] = hr에, rt[L-1] = hl으로 설정하고 시작해야한다.
     int kth(int k, int hl, int hr, int l, int r){
         if (l==r){
             return l;
