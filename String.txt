@@ -220,24 +220,29 @@ struct ahocorasick{
 
 // Manacher (palindrome substring) - O(n)
 namespace manacher{
-    // string -> #s#t#r#i#n#g#
-    vector<int> get(string& s){
+    vector<int> get(string &s){
+        // string -> $s#t#r#i#n#g@
         int n = s.length();
         vector<char> a(2*n+1,'#');
         vector<int> d(2*n+1);
+        a[0] = '$';
+        a.back() = '@';
         for (int i=0;i<n;i++){
             a[2*i+1] = s[i];
         }
 
         int l=0,r=1;
         for (int i=0;i<=2*n;i++){
-            if (i<r){d[i] = min(r-i,d[l+r-i]);}
-            while(i+d[i]<=2*n && a[i+d[i]]==a[i-d[i]]){++d[i];}
+            if (i<=r){
+                d[i] = min(r-i, d[l+r-i]);
+            }
+
+            while(a[i+d[i]]==a[i-d[i]]){++d[i];}
             if (i+d[i]>r){
-                l=i-d[i]; r=i+d[i];
+                l = i-d[i];
+                r = i+d[i];
             }
         }
-
         for (int i=0;i<=2*n;i++){
             if (i%2){
                 if (d[i]%2==0){--d[i];}
