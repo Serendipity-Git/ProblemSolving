@@ -24,41 +24,30 @@ struct DSU {
 };
 
 
-// Fenwick Tree (1-based)
-// 구간의 합을 구할수 있다
+// Fenwick Tree (0-based)
 struct fenwick {
-    ll N;
-    vector<ll> a, s, tree;
-    // 사이즈 n짜리의 penwick tree를 만들어준다.
-    // 1-base index 사용했다
-    fenwick() { N = 0; }
-    fenwick(ll n) {
-        N = n;
-        a.resize(n + 1);
-        s.resize(n + 1);
-        tree.resize(n + 1);
+    int n;
+    vector<int> seg;
+    fenwick(int n) {
+        this->n = n;
+        seg.resize(n);
     }
-    ll query(ll n) {
-        ll ret = 0;
-        while (n >= 1) {
-            ret += tree[n];
-            n -= (n & -n);
+    int query(int r) {
+        if (r<0){return 0;}
+        int ret = 0;
+        for (; r >= 0; r = (r & (r + 1)) - 1){
+            ret += seg[r];
         }
         return ret;
     }
-    // update(n,x) : n번째 원소의 값을 x로 바꿔준다
-    void update(ll n, ll x) {
-        ll d = x - a[n];
-        a[n] += d;
-        while (n <= N) {
-            tree[n] += d;
-            n += (n & -n);
+    void update(int i, int inc) {
+        for (; i < n; i = i | (i + 1)){
+            seg[i] += inc;
         }
     }
-    // query (l,r) : l부터 r까지의 합을 구해준다
-    ll query(ll l, ll r) {
-        if (l > r) { return 0; }
-        return query(r) - query(l - 1);
+    int query(int l, int r){
+        if (l>r){return 0;}
+        return query(r) - query(l-1);
     }
 };
 
@@ -626,7 +615,7 @@ struct pst{
             seg[node].l = seg[prev].l;
             update(i,inc,mid+1,r,seg[node].r, seg[prev].r);
         }
-    }  
+    }
     ll vquery(int from, int to, int l, int r, int node){
         if (from>to || node==0 || to<l || r<from){return 0;}
         if (from<=l && r<=to){return seg[node].v;}
