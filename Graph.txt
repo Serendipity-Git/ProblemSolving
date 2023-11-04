@@ -1,43 +1,26 @@
 // Strongly Connected Component (0-based)
 struct SCC{
     int N,cnt,scnt;
-    vector<vector<int>> adj;
     vector<int> dfsn,scc;
     stack<int> stk;
-
-    SCC(){N=cnt=scnt=0;}
-    SCC(int n){
-        N=n;
+    SCC(vector<vector<int>>& g){
+        N = g.size();
         cnt=scnt=0;
-        adj.resize(N);
-        dfsn.resize(N);
-        scc.resize(N);
+        dfsn.resize(N,-1);
+        scc.resize(N,-1);
         for (int i=0;i<N;i++){
-            dfsn[i]=scc[i]=-1;
+            if (dfsn[i]==-1){dfs(g,i);}
         }
     }
-
-    void addEdge(int u, int v){
-        adj[u].push_back(v);
-    }
-
-    void init(){
-        for (int i=0;i<N;i++){
-            if (dfsn[i]==-1){dfs(i);}
-        }
-    }
-
-    int dfs(int n){
+    int dfs(vector<vector<int>>& g, int n){
         dfsn[n]=cnt; ++cnt; stk.push(n);
-
         int ret = dfsn[n];
-        for (auto& it:adj[n]){
-            if (dfsn[it]==-1){ret=min(ret,dfs(it));}
+        for (auto& it:g[n]){
+            if (dfsn[it]==-1){ret=min(ret,dfs(g,it));}
             else{
                 if (scc[it]==-1){ret=min(ret,dfsn[it]);}
             }
         }
-
         if (ret==dfsn[n]){
             while(!stk.empty()){
                 int tmp = stk.top(); stk.pop();
