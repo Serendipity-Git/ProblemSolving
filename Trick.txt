@@ -1,146 +1,112 @@
-
-// Fast Fourier Transform && convolution
-// query(A,B)는 다항식 A와 B의 곱을 벡터로 리턴한다.
-struct FFT{
-    // 출처: https://blog.myungwoo.kr/54 [PS 이야기]
-	FFT(){;}
-
-    void fft(vector<inum>& a) {
-        int n = a.size(), L = 31 - __builtin_clz(n);
-        static vector<complex<ld>> R(2, 1);
-        static vector<inum> rt(2, 1);
+// Fast Fourier Transform
+namespace FFT{
+    #define rep(i, a, b) for(int i = a; i < (b); ++i)
+    #define all(x) begin(x), end(x)
+    #define sz(x) (int)(x).size()
+    typedef vector<int> vi;
+    typedef complex<double> C;
+    typedef vector<double> vd;
+    void fft(vector<C>& a) {
+        int n = sz(a), L = 31 - __builtin_clz(n);
+        static vector<complex<long double>> R(2, 1);
+        static vector<C> rt(2, 1);  // (^ 10% faster if double)
         for (static int k = 2; k < n; k *= 2) {
             R.resize(n); rt.resize(n);
             auto x = polar(1.0L, acos(-1.0L) / k);
-            for (int i=k;i<k+k;i++) rt[i] = R[i] = i&1 ? R[i/2] * x : R[i/2];
+            rep(i,k,2*k) rt[i] = R[i] = i&1 ? R[i/2] * x : R[i/2];
         }
-        vector<int> rev(n);
-        for (int i=0;i<n;i++) rev[i] = (rev[i / 2] | (i & 1) << L) / 2;
-        for (int i=0;i<n;i++) if (i < rev[i]) swap(a[i], a[rev[i]]);
-        for (int k = 1; k < n; k *= 2){
-            for (int i = 0; i < n; i += 2 * k) for (int j=0;j<k;j++) {
-                auto x = (double *)&rt[j+k], y = (double *)&a[i+j+k];                
-                inum z(x[0]*y[0] - x[1]*y[1], x[0]*y[1] + x[1]*y[0]);     
+        vi rev(n);
+        rep(i,0,n) rev[i] = (rev[i / 2] | (i & 1) << L) / 2;
+        rep(i,0,n) if (i < rev[i]) swap(a[i], a[rev[i]]);
+        for (int k = 1; k < n; k *= 2)
+            for (int i = 0; i < n; i += 2 * k) rep(j,0,k) {
+                // C z = rt[j+k] * a[i+j+k]; // (25% faster if hand-rolled)  /// include-line
+                auto x = (double *)&rt[j+k], y = (double *)&a[i+j+k];        /// exclude-line
+                C z(x[0]*y[0] - x[1]*y[1], x[0]*y[1] + x[1]*y[0]);           /// exclude-line
                 a[i + j + k] = a[i + j] - z;
                 a[i + j] += z;
             }
-        }
     }
- 
-    vector<ll> query(const vector<ll>& a, const vector<ll>& b) {
+    vd conv(const vd& a, const vd& b) {
         if (a.empty() || b.empty()) return {};
-        vector<ll> ret(a.size()+b.size() - 1);
-        int L = 32 - __builtin_clz(ret.size()), n = 1 << L;
-        vector<inum> in(n), out(n);
-        copy(a.begin(),a.end(), begin(in));
-        for (int i=0;i<b.size();i++) in[i].imag(b[i]);
+        vd res(sz(a) + sz(b) - 1);
+        int L = 32 - __builtin_clz(sz(res)), n = 1 << L;
+        vector<C> in(n), out(n);
+        copy(all(a), begin(in));
+        rep(i,0,sz(b)) in[i].imag(b[i]);
         fft(in);
-        for (inum& x: in) x *= x;
-        for (int i=0;i<n;i++) out[i] = in[-i & (n - 1)] - conj(in[i]);
+        for (C& x : in) x *= x;
+        rep(i,0,n) out[i] = in[-i & (n - 1)] - conj(in[i]);
         fft(out);
-        for (int i=0;i<ret.size();i++){
-            ret[i] = static_cast<ll>(imag(out[i]) / (4 * n) + (is_integral_v<ll> ? (imag(out[i]) > 0 ? 0.5 : -0.5) : 0));
-        }
-        return ret;
+        rep(i,0,sz(res)) res[i] = imag(out[i]) / (4 * n);
+        return res;
     }
-};
+    // Higher Precision FFT (Modular)
+    typedef vector<ll> vl;
+    template<int M> vl convMod(const vl &a, const vl &b) {
+        if (a.empty() || b.empty()) return {};
+        vl res(sz(a) + sz(b) - 1);
+        int B=32-__builtin_clz(sz(res)), n=1<<B, cut=int(sqrt(M));
+        vector<C> L(n), R(n), outs(n), outl(n);
+        rep(i,0,sz(a)) L[i] = C((int)a[i] / cut, (int)a[i] % cut);
+        rep(i,0,sz(b)) R[i] = C((int)b[i] / cut, (int)b[i] % cut);
+        fft(L), fft(R);
+        rep(i,0,n) {
+            int j = -i & (n - 1);
+            outl[j] = (L[i] + conj(L[j])) * R[i] / (2.0 * n);
+            outs[j] = (L[i] - conj(L[j])) * R[i] / (2.0 * n) / 1i;
+        }
+        fft(outl), fft(outs);
+        rep(i,0,sz(res)) {
+            ll av = ll(real(outl[i])+.5), cv = ll(imag(outs[i])+.5);
+            ll bv = ll(imag(outl[i])+.5) + ll(real(outs[i])+.5);
+            res[i] = ((av % M * cut + bv) % M * cut + cv) % M;
+        }
+        return res;
+    }
+}
 
-// koosaga fft
-namespace fft{
-    typedef long long lint;
-    typedef complex<double> base;
-    void fft(vector<base> &a, bool inv){
-        int n = a.size(), j = 0;
-        vector<base> roots(n/2);
-        for(int i=1; i<n; i++){
-            int bit = (n >> 1);
-            while(j >= bit){
-                j -= bit;
-                bit >>= 1;
+// Number Theoretic Transform
+namespace NTT{
+    #define rep(i, a, b) for(int i = a; i < (b); ++i)
+    #define all(x) begin(x), end(x)
+    #define sz(x) (int)(x).size()
+    typedef vector<int> vi;
+    typedef vector<ll> vl;
+    const ll mod = (119 << 23) + 1, root = 62; // = 998244353
+    // For p < 2^30 there is also e.g. 5 << 25, 7 << 26, 479 << 21
+    // and 483 << 21 (same root). The last two are > 10^9.
+    void ntt(vl &a) {
+        int n = sz(a), L = 31 - __builtin_clz(n);
+        static vl rt(2, 1);
+        for (static int k = 2, s = 2; k < n; k *= 2, s++) {
+            rt.resize(n);
+            ll z[] = {1, power(root, mod >> s, mod)};
+            rep(i,k,2*k) rt[i] = rt[i / 2] * z[i & 1] % mod;
+        }
+        vi rev(n);
+        rep(i,0,n) rev[i] = (rev[i / 2] | (i & 1) << L) / 2;
+        rep(i,0,n) if (i < rev[i]) swap(a[i], a[rev[i]]);
+        for (int k = 1; k < n; k *= 2)
+            for (int i = 0; i < n; i += 2 * k) rep(j,0,k) {
+                ll z = rt[j + k] * a[i + j + k] % mod, &ai = a[i + j];
+                a[i + j + k] = ai - z + (z > ai ? mod : 0);
+                ai += (ai + z >= mod ? z - mod : z);
             }
-            j += bit;
-            if(i < j) swap(a[i], a[j]);
-        }
-        double ang = 2 * acos(-1) / n * (inv ? -1 : 1);
-        for(int i=0; i<n/2; i++){
-            roots[i] = base(cos(ang * i), sin(ang * i));
-        }
-        /* In NTT, let prr = primitive root. Then,
-        int ang = ipow(prr, (mod - 1) / n);
-        if(inv) ang = ipow(ang, mod - 2);
-        for(int i=0; i<n/2; i++){
-            roots[i] = (i ? (1ll * roots[i-1] * ang % mod) : 1);
-        }
-        XOR Convolution : set roots[*] = 1.
-        OR Convolution : set roots[*] = 1, and do following:
-        if (!inv) {
-            a[j + k] = u + v;
-            a[j + k + i/2] = u;
-        } else {
-            a[j + k] = v;
-            a[j + k + i/2] = u - v;
-        }
-        */
-        for(int i=2; i<=n; i<<=1){
-            int step = n / i;
-            for(int j=0; j<n; j+=i){
-                for(int k=0; k<i/2; k++){
-                    base u = a[j+k], v = a[j+k+i/2] * roots[step * k];
-                    a[j+k] = u+v;
-                    a[j+k+i/2] = u-v;
-                }
-            }
-        }
-        if(inv) for(int i=0; i<n; i++) a[i] /= n; // skip for OR convolution.
     }
+    vl conv(const vl &a, const vl &b) {
+        if (a.empty() || b.empty()) return {};
+        int s = sz(a) + sz(b) - 1, B = 32 - __builtin_clz(s), n = 1 << B;
+        int inv = power(n, mod - 2, mod);
+        vl L(a), R(b), out(n);
+        L.resize(n), R.resize(n);
+        ntt(L), ntt(R);
+        rep(i,0,n) out[-i & (n - 1)] = (ll)L[i] * R[i] % mod * inv % mod;
+        ntt(out);
+        return {out.begin(), out.begin() + s};
+    }
+}
 
-    vector<lint> multiply(vector<lint> &v, vector<lint> &w){
-        vector<base> fv(v.begin(), v.end()), fw(w.begin(), w.end());
-        int n = 2; while(n < v.size() + w.size()) n <<= 1;
-        fv.resize(n); fw.resize(n);
-        fft(fv, 0); fft(fw, 0);
-        for(int i=0; i<n; i++) fv[i] *= fw[i];
-        fft(fv, 1);
-        vector<lint> ret(n);
-        for(int i=0; i<n; i++) ret[i] = (lint)round(fv[i].real());
-        return ret;
-    }
-    vector<lint> multiply(vector<lint> &v, vector<lint> &w, lint mod){
-        int n = 2; while(n < v.size() + w.size()) n <<= 1;
-        vector<base> v1(n), v2(n), r1(n), r2(n);
-        for(int i=0; i<v.size(); i++){
-            v1[i] = base(v[i] >> 15, v[i] & 32767);
-        }
-        for(int i=0; i<w.size(); i++){
-            v2[i] = base(w[i] >> 15, w[i] & 32767);
-        }
-        fft(v1, 0);
-        fft(v2, 0);
-        for(int i=0; i<n; i++){
-            int j = (i ? (n - i) : i);
-            base ans1 = (v1[i] + conj(v1[j])) * base(0.5, 0);
-            base ans2 = (v1[i] - conj(v1[j])) * base(0, -0.5);
-            base ans3 = (v2[i] + conj(v2[j])) * base(0.5, 0);
-            base ans4 = (v2[i] - conj(v2[j])) * base(0, -0.5);
-            r1[i] = (ans1 * ans3) + (ans1 * ans4) * base(0, 1);
-            r2[i] = (ans2 * ans3) + (ans2 * ans4) * base(0, 1);
-        }
-        fft(r1, 1);
-        fft(r2, 1);
-        vector<lint> ret(n);
-        for(int i=0; i<n; i++){
-            lint av = (lint)round(r1[i].real());
-            lint bv = (lint)round(r1[i].imag()) + (lint)round(r2[i].real());
-            lint cv = (lint)round(r2[i].imag());
-            av %= mod, bv %= mod, cv %= mod;
-            ret[i] = (av << 30) + (bv << 15) + cv;
-            ret[i] %= mod;
-            ret[i] += mod;
-            ret[i] %= mod;
-        }
-        return ret;
-    }
-};
 
 // Convex hull trick (Monotone slope)
 // dp(i) = min(M(j)*X(i) + N(j)) + C(i) (쪼개는 dp 최적화)
