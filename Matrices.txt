@@ -1,0 +1,369 @@
+// Basic Matrix operations
+struct Matrix {
+	int r, c;
+	vector<vector<ll>> mat;
+
+	Matrix() { ; }
+	Matrix(int r, int c) {
+		this->r = r; this->c = c;
+		mat.resize(r);
+		for (int i = 0; i < r; i++) { mat[i].resize(c); }
+		for (int j = 0; j < r; j++) {
+			for (int i = 0; i < c; i++) { mat[j][i] = 0; }
+		}
+	}
+	void identity() {
+		for (int i = 0; i < r; i++) { mat[i][i] = 1; }
+	}
+	void add(Matrix& other) {
+		for (int j = 0; j < r; j++) {
+			for (int i = 0; i < c; i++) {
+				mat[j][i] += other.mat[j][i];
+				mat[j][i]%=MOD;
+			}
+		}
+	}
+	void sub(Matrix& other) {
+		for (int j = 0; j < r; j++) {
+			for (int i = 0; i < c; i++) {
+				mat[j][i] -= other.mat[j][i];
+				(mat[j][i]+MOD)%MOD;
+			}
+		}
+	}
+	void mul(Matrix& other) {
+		vector<vector<ll>> ret(r);
+		for (int i = 0; i < r; i++) { ret[i].resize(other.c); }
+
+		for (int j = 0; j < r; j++) {
+			for (int i = 0; i < other.c; i++) {
+				for (int k = 0; k < c; k++) {
+					ret[j][i] += mat[j][k] * other.mat[k][i];
+					ret[j][i] %= MOD;
+				}
+			}
+		}
+		c = other.c;
+		mat = ret;
+	}
+    void pow(ll n){
+        Matrix ret(r,r), tmp(r,r);
+        ret.identity();
+        for (int j=0;j<r;j++){
+            for (int i=0;i<c;i++){
+                tmp.mat[j][i]+=mat[j][i];
+            }
+        }
+
+        while(n){
+            if (n&1){
+                ret.mul(tmp);
+            }
+            tmp.mul(tmp);
+            n>>=1;
+        }
+        mat=ret.mat;
+    }
+
+	// matrix inverse not yet
+};
+
+// Determinant of matrix, O(n^3)
+namespace Det{
+    #define rep(i, a, b) for(int i = a; i < (b); ++i)
+    #define sz(x) (int)(x).size()
+    double det(vector<vector<double>> a) {
+        int n = sz(a); double res = 1;
+        rep(i,0,n) {
+            int b = i;
+            rep(j,i+1,n) if (fabs(a[j][i]) > fabs(a[b][i])) b = j;
+            if (i != b) swap(a[i], a[b]), res *= -1;
+            res *= a[i][i];
+            if (res == 0) return 0;
+            rep(j,i+1,n) {
+                double v = a[j][i] / a[i][i];
+                if (v != 0) rep(k,i+1,n) a[j][k] -= v * a[i][k];
+            }
+        }
+        return res;
+    }
+    ll det(vector<vector<ll>> a) {
+        int n = sz(a); ll ans = 1;
+        rep(i,0,n) {
+            rep(j,i+1,n) {
+                while (a[j][i] != 0) { // gcd step
+                    ll t = a[i][i] / a[j][i];
+                    if (t) rep(k,i,n)
+                        a[i][k] = (a[i][k] - a[j][k] * t) % mod;
+                    swap(a[i], a[j]);
+                    ans *= -1;
+                }
+            }
+            ans = ans * a[i][i] % mod;
+            if (!ans) return 0;
+        }
+        return (ans + mod) % mod;
+    }
+}
+
+// Inverse of matrix, O(n^3)
+// Returns rank, result is stored in A unless (rank < n)
+namespace Inverse{
+    #define rep(i, a, b) for(int i = a; i < (b); ++i)
+    #define sz(x) (int)(x).size()
+    #define vi vector<int>
+    int matInv(vector<vector<double>>& A) {
+        int n = sz(A); vi col(n);
+        vector<vector<double>> tmp(n, vector<double>(n));
+        rep(i,0,n) tmp[i][i] = 1, col[i] = i;
+
+        rep(i,0,n) {
+            int r = i, c = i;
+            rep(j,i,n) rep(k,i,n)
+                if (fabs(A[j][k]) > fabs(A[r][c]))
+                    r = j, c = k;
+            if (fabs(A[r][c]) < 1e-12) return i;
+            A[i].swap(A[r]); tmp[i].swap(tmp[r]);
+            rep(j,0,n)
+                swap(A[j][i], A[j][c]), swap(tmp[j][i], tmp[j][c]);
+            swap(col[i], col[c]);
+            double v = A[i][i];
+            rep(j,i+1,n) {
+                double f = A[j][i] / v;
+                A[j][i] = 0;
+                rep(k,i+1,n) A[j][k] -= f*A[i][k];
+                rep(k,0,n) tmp[j][k] -= f*tmp[i][k];
+            }
+            rep(j,i+1,n) A[i][j] /= v;
+            rep(j,0,n) tmp[i][j] /= v;
+            A[i][i] = 1;
+        }
+
+        /// forget A at this point, just eliminate tmp backward
+        for (int i = n-1; i > 0; --i) rep(j,0,i) {
+            double v = A[j][i];
+            rep(k,0,n) tmp[j][k] -= v*tmp[i][k];
+        }
+
+        rep(i,0,n) rep(j,0,n) A[col[i]][col[j]] = tmp[i][j];
+        return n;
+    }
+    // requires Math::power(a,b,mod)
+    int matInv(vector<vector<ll>>& A) {
+        int n = sz(A); vi col(n);
+        vector<vector<ll>> tmp(n, vector<ll>(n));
+        rep(i,0,n) tmp[i][i] = 1, col[i] = i;
+
+        rep(i,0,n) {
+            int r = i, c = i;
+            rep(j,i,n) rep(k,i,n) if (A[j][k]) {
+                r = j; c = k; goto found;
+            }
+            return i;
+    found:
+            A[i].swap(A[r]); tmp[i].swap(tmp[r]);
+            rep(j,0,n) swap(A[j][i], A[j][c]), swap(tmp[j][i], tmp[j][c]);
+            swap(col[i], col[c]);
+            ll v = power(A[i][i], mod - 2, mod);
+            rep(j,i+1,n) {
+                ll f = A[j][i] * v % mod;
+                A[j][i] = 0;
+                rep(k,i+1,n) A[j][k] = (A[j][k] - f*A[i][k]) % mod;
+                rep(k,0,n) tmp[j][k] = (tmp[j][k] - f*tmp[i][k]) % mod;
+            }
+            rep(j,i+1,n) A[i][j] = A[i][j] * v % mod;
+            rep(j,0,n) tmp[i][j] = tmp[i][j] * v % mod;
+            A[i][i] = 1;
+        }
+
+        for (int i = n-1; i > 0; --i) rep(j,0,i) {
+            ll v = A[j][i];
+            rep(k,0,n) tmp[j][k] = (tmp[j][k] - v*tmp[i][k]) % mod;
+        }
+
+        rep(i,0,n) rep(j,0,n)
+            A[col[i]][col[j]] = tmp[i][j] % mod + (tmp[i][j] < 0 ? mod : 0);
+        return n;
+    }
+}
+
+// Gaussian Elimination O(N^2M)
+// Solve Ax = b system
+// If there are multiple solutions (rank<m), an arbitrary one is returned
+// Returns rank, or -1 if no solutions.
+namespace gauss{
+    #define rep(i, a, b) for(int i = a; i < (b); ++i)
+    #define sz(x) (int)(x).size()
+    #define all(x) begin(x), end(x)
+    typedef vector<double> vd;
+    typedef vector<int> vi;
+    const double eps = 1e-12;
+    int solveLinear(vector<vd> A, vd b, vd& x) {
+        int n = sz(A), m = sz(x), rank = 0, br, bc;
+        if (n) assert(sz(A[0]) == m);
+        vi col(m); iota(all(col), 0);
+
+        rep(i,0,n) {
+            double v, bv = 0;
+            rep(r,i,n) rep(c,i,m)
+                if ((v = fabs(A[r][c])) > bv)
+                    br = r, bc = c, bv = v;
+            if (bv <= eps) {
+                rep(j,i,n) if (fabs(b[j]) > eps) return -1;
+                break;
+            }
+            swap(A[i], A[br]);
+            swap(b[i], b[br]);
+            swap(col[i], col[bc]);
+            rep(j,0,n) swap(A[j][i], A[j][bc]);
+            bv = 1/A[i][i];
+            rep(j,i+1,n) {
+                double fac = A[j][i] * bv;
+                b[j] -= fac * b[i];
+                rep(k,i+1,m) A[j][k] -= fac*A[i][k];
+            }
+            rank++;
+        }
+        x.assign(m, 0);
+        for (int i = rank; i--;) {
+            b[i] /= A[i][i];
+            x[col[i]] = b[i];
+            rep(j,0,i) b[j] -= A[j][i] * b[i];
+        }
+        return rank; // (multiple solutions if rank < m)
+    }
+
+    typedef bitset<1000> bs;
+    int solveLinear(vector<bs> A, vi b, bs& x, int m) {
+        int n = sz(A), rank = 0, br;
+        assert(m <= sz(x));
+        vi col(m); iota(all(col), 0);
+        rep(i,0,n) {
+            for (br=i; br<n; ++br) if (A[br].any()) break;
+            if (br == n) {
+                rep(j,i,n) if(b[j]) return -1;
+                break;
+            }
+            int bc = (int)A[br]._Find_next(i-1);
+            swap(A[i], A[br]);
+            swap(b[i], b[br]);
+            swap(col[i], col[bc]);
+            rep(j,0,n) if (A[j][i] != A[j][bc]) {
+                A[j].flip(i); A[j].flip(bc);
+            }
+            rep(j,i+1,n) if (A[j][i]) {
+                b[j] ^= b[i];
+                A[j] ^= A[i];
+            }
+            rank++;
+        }
+
+        x = bs();
+        for (int i = rank; i--;) {
+            if (!b[i]) continue;
+            x[col[i]] = 1;
+            rep(j,0,i) b[j] ^= A[j][i];
+        }
+        return rank; // (multiple solutions if rank < m)
+    }
+}
+
+// Another Gaussian Elimination 
+// gauss elimination
+namespace gauss{
+    // general real number 
+    int gauss(vector<vector<double>> a, vector<double> b, vector<double>& ans){
+        const double EPS = -1E9;
+        int N = a.size();
+        int M = a[0].size();
+        vector<int> where(M,-1);
+
+        for(int row=0,col=0; col<M && row<N; col++){
+            int sel=row;
+            for (int j=row;j<N;j++){
+                if (abs(a[j][col]) > abs(a[sel][col])){sel=j;}
+            }
+            if (abs(a[sel][col]) < EPS){continue;}
+
+            for(int i=col;i<M;i++){
+                swap(a[row][i],a[sel][i]);
+            }
+            swap(b[row],b[sel]);
+            where[col] = row;
+
+            for (int j=0;j<N;j++){
+                if (j!=row){
+                    double c = a[j][col] / a[row][col];
+                    for (int i=col;i<M;i++){
+                        a[j][i]-= c*a[row][i];
+                    }
+                    b[j]-=c*b[row];
+                }
+            }
+            ++row;
+        }
+
+        for(int i=0;i<M;i++){ans[i]=0;}
+        for(int i=0;i<M;i++){
+            if (where[i]!=-1){
+                ans[i] = b[where[i]] / a[where[i]][i];
+            }
+        }
+        for (int j=0;j<N;j++){
+            double sum=0;
+            for(int i=0;i<M;i++){
+                sum+=a[j][i]*ans[i];
+            }
+            if (abs(sum-b[j]) > EPS){return 0;}
+        }
+        for(int i=0;i<M;i++){
+            if (where[i]==-1){return 2;}
+        }
+        return 1;
+    }
+
+    // binary linear system
+    int gauss2(vector<bitset<m>> a, vector<bitset<1>> b, int n, int m, bitset<m>& ans){
+        vector<int> where(m,-1);
+
+        for(int row=0,col=0; col<m && row<n; col++){
+            int sel=row;
+            for (int j=row;j<n;j++){
+                if (a[j][col]){
+                    swap(a[j],a[row]);
+                    swap(b[j],b[row]);
+                    break;
+                }
+            }
+            if (!a[row][col]){continue;}
+            where[col] = row;
+
+            for (int j=0;j<n;j++){
+                if (j!=row && a[j][col]){
+                    a[j]^=a[row];
+                    b[j]^=b[row];
+                }
+            }
+            ++row;
+        }
+
+        for(int i=0;i<m;i++){ans[i]=0;}
+        for(int i=0;i<m;i++){
+            if (where[i]!=-1 && a[where[i]][i]==1){
+                ans[i] = b[where[i]][0];
+            }
+        }
+        for (int j=0;j<n;j++){
+            int sum=0;
+            for(int i=0;i<m;i++){
+                sum+=a[j][i]*ans[i]%2;
+                sum%=2;
+            }
+            if (sum!=b[j][0]){return 0;}
+        }
+        for(int i=0;i<m;i++){
+            if (where[i]==-1){return 2;}
+        }
+        return 1;
+    }
+}
