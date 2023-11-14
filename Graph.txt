@@ -33,6 +33,47 @@ struct SCC{
     }   
 };
 
+// Biconnected Component (0-based)
+struct BCC{
+	int N,cnt,bcnt;
+	vector<int> in;
+	stack<pi> stk;
+	vector<vector<pi>> bcc;
+	BCC(vector<vector<int>>& g){
+		N = g.size();
+		cnt=bcnt=0;
+		in.resize(N,-1);
+		for (int i=0;i<N;i++){
+			if (in[i]==-1){dfs(g, i,-1);}
+		}
+	}
+	int dfs(vector<vector<int>>& g, int u, int p){
+        in[u]=cnt; ++cnt;
+        int ret = in[u];
+        for (auto& v:g[u]){
+            if (p==v){continue;}
+            if (in[u]>in[v]){stk.push({u,v});}
+
+            if (in[v]>=0){
+                ret = min(ret, in[v]);
+            }else{
+                int x = dfs(g,v,u);
+                if (x>=in[u]){
+                    ++bcnt;
+                    bcc.emplace_back();
+                    while(!stk.empty()){
+						pi e = stk.top(); stk.pop();
+						bcc[bcnt-1].push_back(e);
+						if (e==pi(u,v)){break;}
+                    }
+                }
+                ret = min(ret,x);
+            }
+        }
+        return ret;
+	}
+};
+
 // Heavy-Light Decomposition (0-based)
 struct HLD{
     int N,cnt;
