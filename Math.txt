@@ -72,7 +72,7 @@ namespace euler_phi{
 
 // Miller_Rabin prime test O(logn*logn)
 // check32(int) check64(ll)
-// check if n is prime number 
+// check if n is prime number
 namespace miller_rabin{
     bool check32(ll n){
         vector<int> A = {2,7,61};
@@ -366,6 +366,29 @@ ll BSGS(ll x, ll y, ll MOD){
     }
     return -1;
 }
+
+// Primitive Root
+int generator (int p) {
+    vector<int> fact;
+    int phi = p-1,  n = phi;
+    for (int i=2; i*i<=n; ++i)
+        if (n % i == 0) {
+            fact.push_back (i);
+            while (n % i == 0)
+                n /= i;
+        }
+    if (n > 1)
+        fact.push_back (n);
+
+    for (int res=2; res<=p; ++res) {
+        bool ok = true;
+        for (size_t i=0; i<fact.size() && ok; ++i)
+            ok &= power (res, phi / fact[i], p) != 1;
+        if (ok)  return res;
+    }
+    return -1;
+}
+
 
 // Bit operations
 int bitReverse(int n, int k) {
