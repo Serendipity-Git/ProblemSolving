@@ -318,14 +318,7 @@ namespace z2_basis{
                 }
             }
         };
-
         for (int i=0;i<a.size();i++){insert(a[i]);}
-        sort(basis.rbegin(),basis.rend());
-        for (int j=1;j<basis.size();j++){
-            for (int i=0;i<j;i++){
-                if ((basis[i]^basis[j]) < basis[i]){basis[i]^=basis[j];}
-            }
-        }
         return basis;
     }
 }
