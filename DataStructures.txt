@@ -803,3 +803,20 @@ void m_erase(pbds& st, int x){
 // m_erase(st, x) : multiset에서 x 삭제
 // st.find_by_order(x) : multiset을 일차원 배열로 생각했을 때 x+1번째 원소 포인터 반환
 // st.order_of_key(x) : multiset에서 x보다 작은 원소 개수 반환
+
+// ROPE
+namespace Rope{
+    #include <ext/rope>  
+    using namespace __gnu_cxx;
+    void test(){
+        crope s = "abcdef";
+        crope t = "tttt";
+        s.push_back('g'); // s = abcdefg - O(logN)
+        s.pop_back(); // s = abcdef - O(logN)
+        s.insert(1,t); // s = attttbcdef (insert t before s[1]) - O(N)
+        s.erase(2,3); // s = atbcdef (erase s[2-4], 3 characters) - O(logN)
+        crope sub = s.substr(2,4); // sub = bcde (take s[2-5], 4 characters) - O(logN)
+        crope add = s+t; // add = atbcdeftttt (concatenate s+t) - O(1)
+        s.replace(0,5,t); // s = ttttef (replace s[0-4] with t, 5 characters) - O(logN)
+    }
+}
