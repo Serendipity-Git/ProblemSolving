@@ -1,3 +1,14 @@
 // # of objects (Combinatoric)
 - Can you calculate contribution of an object to answer?
 - Is there any other object that has equivalent # to original object? (ex. # of CC in functional graph == # of Cycle)
+
+
+// DP transitions
+- It might be easier to consider transition backward/forward (Try both directions)
+
+// Permuations
+- Is it useful to think about inverse?
+
+// Operations
+- Any invariant of operation? (ex. Parity, sum of something..)
+- 
