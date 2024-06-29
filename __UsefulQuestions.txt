@@ -11,4 +11,3 @@
 
 // Operations
 - Any invariant of operation? (ex. Parity, sum of something..)
-- 
