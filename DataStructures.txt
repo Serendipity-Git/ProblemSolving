@@ -644,6 +644,162 @@ struct pst{
     }
 };
 
+// Splay Tree (amortized O(logN))
+struct SplayTree{
+    struct Node{
+        Node *l, *r, *p;
+        ll val,sum,lazy;
+        int sz;
+        Node(ll v, Node* p = nullptr) : p(p){
+            l = r = nullptr;
+            val = sum = v;
+            lazy = 0;
+            sz = 1;
+        }
+        Node() : Node(0){}
+        ~Node(){
+            if (l){delete(l);}
+            if (r){delete(r);}
+        }
+    };
+
+    int N;
+    Node* root;
+    vector<Node*> ptr;
+    vector<ll> a;
+
+    SplayTree(int n) : root(){
+        N = n;
+        a.resize(n+2);
+        ptr.resize(n+2);
+        if (root){delete(root);}
+        root = new Node(0);
+    }
+    ~SplayTree(){
+        if(root) delete root;
+    }
+    void init(){
+        if (root){delete root;}
+        root = new Node(0);
+        ptr[0] = root;
+        Node* cur = root;
+        for (int i=1;i<=N+1;i++){
+            ptr[i] = new Node(a[i],cur);
+            cur->r = ptr[i];
+            cur = cur->r;
+        }
+        for (int i=N+1;i>=0;i--){
+            pull(ptr[i]);
+        }
+        splay(ptr[N/2]);      
+    }
+    void push(Node* x){
+        x->val += x->lazy;
+        if (x->l){
+            x->l->lazy += x->lazy;
+            x->l->sum += x->l->sz * x->lazy;
+        }
+        if (x->r){
+            x->r->lazy += x->lazy;
+            x->r->sum += x->r->sz * x->lazy;
+        }
+        x->lazy = 0;
+    }
+    void pull(Node* x){
+        push(x);
+        x->sz = 1;
+        x->sum = x->val;
+        if (x->l){
+            x->sz += x->l->sz;
+            x->sum += x->l->sum;
+        }
+        if (x->r){
+            x->sz += x->r->sz;
+            x->sum += x->r->sum;
+        }
+    }
+    void update(int l, int r, ll inc){
+        auto x = gather(l,r);
+        x->lazy += inc;
+        x->sum += x->sz * inc;
+        push(x);
+    }
+    void rotate(Node* x){
+        Node* p = x->p;
+        Node* b;
+        if (!p){return;}
+        if (x == p->l){
+            b = x->r;
+            p->l = b;
+            x->r = p;
+        }else{
+            b = x->l;
+            p->r = b;
+            x->l = p;
+        }
+        Node *g = p->p;
+        p->p = x;
+        x->p = g;
+        if (b){b->p = p;}
+        if (g){
+            if (g->l == p){g->l = x;}
+            else{g->r = x;}
+        }else{
+            root = x;
+        }
+        pull(p);
+        pull(x);
+    }
+    void splay(Node *x, Node *r = nullptr){
+        while(x->p != r){
+            Node* p = x->p;
+            Node* g = p->p;
+
+            if (g != r){
+                if ((x==p->l) == (p==g->l)){
+                    rotate(p);
+                    rotate(x);
+                }else{
+                    rotate(x);
+                    rotate(x);
+                }
+            }else{
+                rotate(x); break;
+            }
+        }
+        if (!r){root = x;}
+    }
+    void kth(int k){
+        Node* cur = root;
+        push(cur);
+        while(1){
+            if (cur->l && cur->l->sz > k){
+                cur = cur->l; 
+                push(cur);
+                continue;
+            }
+            if (cur->l){
+                k -= cur->l->sz;
+            }
+            if (k==0){
+                splay(cur);
+                return;
+            }
+            --k;
+            cur = cur->r;
+            push(cur);
+        }
+    }
+    Node* gather(int s, int e){
+        kth(e+1);
+        Node* r = root;
+        kth(s-1);
+        splay(r, root);
+        return root->r->l;
+    }
+};
+
+
 
 // Sparse Table (0-based)
 범위 [L,R]이 주어졌을 때 Function(L,L+1,...,R)을 빠르게 한다
