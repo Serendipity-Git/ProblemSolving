@@ -1,6 +1,7 @@
 // # of objects (Combinatoric)
 - Can you calculate contribution of an object to answer?
 - Is there any other object that has equivalent # to original object? (ex. # of CC in functional graph == # of Cycle)
+- Can you fix object and formulate how does that object contributes?
 
 
 // DP transitions
