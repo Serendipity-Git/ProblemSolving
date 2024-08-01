@@ -12,6 +12,7 @@
 
 // Operations
 - Any invariant of operation? (ex. Parity, sum of something..)
+- Maybe useful to think about inverse operation
 
 // Divide and Conquer
 - Can you solve original problem with DnC? Then, for query version try DnC Segment tree
