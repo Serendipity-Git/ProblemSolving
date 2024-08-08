@@ -371,6 +371,28 @@ namespace Convexhull{
             }
         return {h.begin(), h.begin() + t - (t == 2 && h[0] == h[1])};
     }
+    vector<P> convexHull_colinear(vector<P> pts){
+        P p0 = *min_element(pts.begin(), pts.end(), [](P a, P b) {
+            return make_pair(a.y, a.x) < make_pair(b.y, b.x);
+        });
+        sort(pts.begin(), pts.end(), [&p0](const P& a, const P& b) {
+            ll o = p0.cross(a,b);
+            if (o == 0)
+                return (p0.x-a.x)*(p0.x-a.x) + (p0.y-a.y)*(p0.y-a.y)
+                    < (p0.x-b.x)*(p0.x-b.x) + (p0.y-b.y)*(p0.y-b.y);
+            return o < 0;
+        });
+        int i = (int)pts.size()-1;
+        while (i >= 0 && p0.cross(pts[i], pts.back()) == 0) i--;
+        reverse(pts.begin()+i+1, pts.end());
+        vector<P> st;
+        for (int i = 0; i < (int)pts.size(); i++) {
+            while (st.size() > 1 && st[st.size()-2].cross(st.back(), pts[i]) >= 0)
+                st.pop_back();
+            st.push_back(pts[i]);
+        }
+        return st;
+    }
 }
 
 // Minkowski.h
