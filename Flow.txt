@@ -95,19 +95,18 @@ struct mcmf{
         ll c,w,f=0;
         edge(int u, int v, ll c, ll w):u(u),v(v),c(c),w(w){}
     };
-
     int N,s,t,M=0;
     vector<edge> E;
-    vector<int> back;
+    vector<int> back,inque;
     vector<ll> dis,flow;
     vector<vector<int>> adj;
     queue<int> que;
-
     mcmf(int N):N(N){
         adj.resize(N);
         back.resize(N);
         flow.resize(N);
         dis.resize(N);
+        inque.resize(N);
     }
     void addEdge(int u, int v, ll c, ll w){
         E.emplace_back(u,v,c,w);
@@ -120,10 +119,11 @@ struct mcmf{
         fill(back.begin(),back.end(),-1);
         fill(flow.begin(),flow.end(),0);
         fill(dis.begin(),dis.end(),LLINF);
+        fill(inque.begin(), inque.end(),0);
 
-        dis[s]=0; que.push(s); flow[s]=LLINF;
+        dis[s]=0; que.push(s); flow[s]=LLINF; inque[s]=1;
         while(!que.empty()){
-            int u = que.front(); que.pop();
+            int u = que.front(); que.pop(); inque[u]=0;
             for (int& e:adj[u]){
                 int v = E[e].v; 
                 ll sp = E[e].c - E[e].f;
@@ -132,7 +132,10 @@ struct mcmf{
                     back[v] = e;
                     flow[v] = min(flow[u],sp);
                     dis[v] = dis[u]+w;
-                    que.push(v);
+                    if (!inque[v]){
+                        inque[v] = 1;
+                        que.push(v);
+                    }
                 }
             }
         }
