@@ -130,7 +130,7 @@ struct HLD{
         }
         if (h[u]>h[v]){swap(u,v);}
         // ret = seg.query(pos[u]+1,pos[v]); (edge query)
-        // ret = seg.query(pos[u],pos[v])l (vertex query)
+        // ret = seg.query(pos[u],pos[v]); (vertex query)
         // 해당 line은 edge에 관한 query인지 vertex에 관한 query인지에 따라 다르다
         return ret;
     }
