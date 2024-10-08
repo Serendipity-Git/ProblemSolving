@@ -16,3 +16,7 @@
 
 // Divide and Conquer
 - Can you solve original problem with DnC? Then, for query version try DnC Segment tree
+
+// Recursive Objects
+- Can you construct an object in a recursive way?
+- Is there any construction that derives from recursive object?
