@@ -2,6 +2,10 @@
 ##                                    Author : Kim Tae Yoon (Serendipity__)                                    ##
 ###############################################################################################################*/
 
+// change to O3 to disable fast-math for geometry problems
+#pragma GCC optimize("Ofast,unroll-loops")
+#pragma GCC target("avx2,popcnt,lzcnt,abm,bmi,bmi2,fma,tune=native")
+
 #include <bits/stdc++.h>
 #define fastio std::ios_base::sync_with_stdio(false); cin.tie(NULL); cout.tie(NULL);
 #define prntyes cout<<"Yes\n";
