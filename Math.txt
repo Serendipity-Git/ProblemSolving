@@ -312,23 +312,48 @@ ll floor_sum(ll a, ll b, ll m, ll n){
     return x*n - floor_sum(m,m-b-1,a,x-1);
 }
 
-// BSGS(X,Y,MOD) O(sqrtMOD*logMOD)
-// X^n == Y (mod MOD)의 가장 작은 n을 찾을 때
-ll BSGS(ll x, ll y, ll MOD){
-    ll k = sqrt(MOD);
-    map<ll,ll> mp;
-    for (ll i=0;i<k;i++){
-        ll div = divide(y,power(x,i,MOD),MOD);
-        // mp[x]=i;
-        if (mp.find(div)==mp.end()){mp[div]=i;}
-    }
-    for (ll i=0;i*k<MOD;i++){
-        ll div = power(x,i*k,MOD);
-        if (mp.find(div)!=mp.end()){
-            return mp[div]+i*k;
-        }
-    }
-    return -1;
+// modLog(a,b,MOD) O(log MOD)
+// a^n == b (mod MOD)의 가장 작은 n을 찾을 때
+ll modLog(ll a, ll b, ll m) {
+	ll n = (ll)sqrt(m+10);
+	while(n*n > m){--n;} ++n;
+	ll e = 1, f = 1, j = 1;
+	unordered_map<ll, ll> A;
+	while (j <= n && (e = f = e * a % m) != b % m)
+		A[e * b % m] = j++;
+	if (e == b % m) return j;
+	if (gcd(m, e) == gcd(m, b)) 
+		rep(i,2,n+2) if (A.count(e = e * f % m))
+			return n * i - A[e];
+	return -1;
+}
+
+// modSqrt(a,p) O(log^p)
+// x^2 == a (mod p)의 x를 찾을때 (p-x가 다른 sol)
+ll modSqrt(ll a, ll p) {
+	a %= p; if (a < 0) a += p;
+	if (a == 0) return 0;
+	assert(power(a, (p-1)/2, p) == 1); // else no solution
+	if (p % 4 == 3) return power(a, (p+1)/4, p);
+	// a^(n+3)/8 or 2^(n+3)/8 * 2^(n-1)/4 works if p % 8 == 5
+	ll s = p - 1, n = 2;
+	int r = 0, m;
+	while (s % 2 == 0)
+		++r, s /= 2;
+	/// find a non-square mod p
+	while (power(n, (p - 1) / 2, p) != p - 1) ++n;
+	ll x = power(a, (s + 1) / 2, p);
+	ll b = power(a, s, p), g = power(n, s, p);
+	for (;; r = m) {
+		ll t = b;
+		for (m = 0; m < r && t != 1; ++m)
+			t = t * t % p;
+		if (m == 0) return x;
+		ll gs = power(g, 1LL << (r - m - 1), p);
+		g = gs * gs % p;
+		x = x * gs % p;
+		b = b * g % p;
+	}
 }
 
 // Primitive Root
