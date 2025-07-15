@@ -163,6 +163,37 @@ struct mcmf{
 };
 
 
+// LR flow (Use Dinic)
+// flow != sum이면 no feasible flow
+// maxflow로 (s,t)의 feasible, maximum flow 구할 수 있음
+// s -> t의 초기 LLINF값을 조정해서 minimal flow도 구할수 있음 (binary search)
+struct LRflow{
+    int s = N; 
+    int t = N+1;
+    int sp = N+2;
+    int tp = N+3;
+    maxflow graph = maxflow(N+4);
+    graph.addEdge(t,s,LLINF);
+
+    ll sum = 0;
+    auto addlr=[&](int u, int v, int l, int r){
+        graph.addEdge(u,v,r-l);
+        graph.addEdge(u,tp,l);
+        graph.addEdge(sp,v,l);
+        sum += l;
+    };
+
+    for (int e=0;e<M;e++){
+        int u,v,l,r; cin>>u>>v>>l>>r;
+        addlr(u,v,l,r);
+    }
+
+    ll flow = graph.query(sp,tp);
+    assert(flow == sum); // otherwise not possible
+
+    ll maxflow = graph.query(s,t);
+};
+
 // Circulation by Dinic O(V^2*E)
 // addEdge(u,v,l,r)로 edge 추가
 // maxflow > graph.sum이면 가능한 flow가 없는 것이다.
